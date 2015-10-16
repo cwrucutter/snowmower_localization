@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
+find_package(FindEigen REQUIRED)
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -82,7 +84,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+ INCLUDE_DIRS include
 #  LIBRARIES snowmower_localization
 #  CATKIN_DEPENDS geometry_msgs nav_msgs roscpp std_msgs tf
 #  DEPENDS system_lib
@@ -95,9 +97,8 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 # include_directories(include)
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
+include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${Eigen_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(snowmower_localization
@@ -106,6 +107,7 @@ include_directories(
 
 ## Declare a cpp executable
 # add_executable(snowmower_localization_node src/snowmower_localization_node.cpp)
+add_executable(ekf src/ekf.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -115,6 +117,7 @@ include_directories(
 # target_link_libraries(snowmower_localization_node
 #   ${catkin_LIBRARIES}
 # )
+target_link_libraries(ekf ${catkin_LIBRARIES})
 
 #############
 ## Install ##
