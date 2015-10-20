@@ -2,8 +2,24 @@
 This repository contains an Extended Kalman Filter (EKF) that fuses wheel encoder, IMU, visual odometry, and DecaWave beacon measurements, along with a model of differential drive vehicle kinematics, into an estimation of the robots location.
 
 ## To Do ##
-* Create an EKF class.
+* **DONE** Create an EKF class.
 
-* Code up the equations for the system model and verify.
+* Include publishers and subscribers.
 
-* Code up the equations for the measurement models and verify.
+* **DONE** Code up the equations for the system model.
+
+* Verify system model.
+
+* **DONE** Code decawave measurement model.
+
+* Verify decawave measurement model.
+
+* Code up IMU measurement model.
+
+* Verify IMU measurement model.
+
+* Code up Encoder measurement model.
+
+* Verify Encoder measurement model.
+
+* Determine covariance matricies.
