@@ -4,7 +4,13 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 ## To Do ##
 * **DONE** Create an EKF class.
 
-* Include publishers and subscribers.
+* **DONE** Include publishers and subscribers.
+
+* Add transform broadcaster to pubState function.
+
+* Populate odometry message with Covariances.
+
+* Create callback functions for subscribers.
 
 * **DONE** Code up the equations for the system model.
 
@@ -23,3 +29,5 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 * Verify Encoder measurement model.
 
 * Determine covariance matricies.
+
+* Set frame_id and child_frame_id using parameters.

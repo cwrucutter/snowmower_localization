@@ -1,4 +1,6 @@
 #include <ros/ros.h>
+#include <nav_msgs/Odometry.h>
+#include <tf/transform_broadcaster.h>
 #include <math.h>
 #include <Eigen/LU>
 #include "snowmower_localization/ekf.h"
@@ -6,11 +8,11 @@
 // System update
 void Ekf::systemUpdate(){
   // Update the state estimate using x_p (the vector) and u
-  double x = state_(1);
-  double y = state_(2);
-  double theta = state_(3);
-  double v = state_(4);
-  double omega = state_(5);
+  double x = state_(0);
+  double y = state_(1);
+  double theta = state_(2);
+  double v = state_(3);
+  double omega = state_(4);
 
   // Update the State
 
@@ -60,18 +62,18 @@ void Ekf::systemUpdate(){
 
 
 Vector4d  Ekf::hDecaWave(Vector5d state) {
-  double d1 = sqrt(pow(dw1x_-state(1),2)+pow(dw1y_-state(2),2));
-  double d2 = sqrt(pow(dw2x_-state(1),2)+pow(dw2y_-state(2),2));
-  double d3 = sqrt(pow(dw3x_-state(1),2)+pow(dw3y_-state(2),2));
-  double d4 = sqrt(pow(dw4x_-state(1),2)+pow(dw4y_-state(2),2));
+  double d1 = sqrt(pow(dw1x_-state(0),2)+pow(dw1y_-state(1),2));
+  double d2 = sqrt(pow(dw2x_-state(0),2)+pow(dw2y_-state(1),2));
+  double d3 = sqrt(pow(dw3x_-state(0),2)+pow(dw3y_-state(1),2));
+  double d4 = sqrt(pow(dw4x_-state(0),2)+pow(dw4y_-state(1),2));
   Vector4d z;
   z << d1, d2, d3, d4;
   return z;
 }
 
 void Ekf::measurementUpdateDecaWave(Vector4d z){
-  double x = state_(1);
-  double y = state_(2);
+  double x = state_(0);
+  double y = state_(1);
 
   // Calculate H
   double H11 = -pow(pow(dw1x_-x,2)+pow(dw1y_-y,2),-0.5)*(dw1x_-x);
@@ -100,9 +102,49 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   cov_ = cov_ - K*H*cov_;
 };
 
+  // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a transform.
+void Ekf::publishState(){
+  // Create an Odometry message to publish
+  nav_msgs::Odometry state_msg;
+
+  // Populate timestamp, position frame, and velocity frame
+  state_msg.header.stamp = ros::Time::now();
+  state_msg.header.frame_id = "map";
+  state_msg.child_frame_id = "base_link";
+
+  // Populate the position and orientation
+  state_msg.pose.pose.position.x = state_(0); // x
+  state_msg.pose.pose.position.y = state_(1); // y
+  state_msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(state_(2)); // theta
+
+  // Populate the covariance matrix
+  state_msg.pose.covariance = 0;
+
+  // Populate the linear and angular velocities
+  state_msg.twist.twist.linear.x = state_(3); // v
+  state_msg.twist.twist.angular.z = state_(4); // omega
+
+  // Populate the covariance matrix
+  state_msg.twist.covariance = 0;
+
+  // Publish the message!
+  statePub_.publish(state_msg);
+
+  // Now for the transform
+
+} 
+
 
 /* Constructor */
 Ekf::Ekf(): private_nh_("~") {
+
+  // Create a publisher object to publish the determined state of the robot. Odometry messages contain both Pose and Twist with covariance. In this simulator, we will not worry about the covariance.
+  statePub_ = n.advertise<nav_msgs::Odometry>("odom_ekf",1);
+
+  // Create a subscriber object to subscribe to the topic 
+  imuSub_ = n.subscribe("imu/data",1,imuSubCB);
+  encSub_ = n.subscribe("enc",1,encSubCB);
+
   // Set dt_
   dt_ = 0.001;
 

@@ -38,6 +38,10 @@ class Ekf {
   // Node specific stuff
   ros::NodeHandle public_nh_;
   ros::NodeHandle private_nh_;
+  ros::Publisher statePub_;
+  ros::Subscriber imuSub_;
+  ros::Subscriber encSub_;
+
 
   // State Vector and Covariance Matrix
   Vector5d state_;
@@ -50,21 +54,19 @@ class Ekf {
   void systemUpdate();
 
   // Map frame measurement updates
-  void measurementUpdateGPS(double x, double y);
-  
   Vector4d  hDecaWave(Vector5d state);
-  void measurementUpdateDecaWave(Vector4d z);
-  
-  void measurementUpdateVisualBeacons(double angles[]);
+  void measurementUpdateDecaWave(Vector4d z); // z is d1-d4
   
   // Odom frame measurement updates
-  void measurementUpdateEncoders(double vR, double vL);
+  void measurementUpdateEncoders(Vector2d z); // z is encL and encR
   
-  void measurementUpdateIMU(double wZ, double aX, double aY);
+  void measurementUpdateIMU(double z); // z is omega_z
   
   void measurementUpdateVisualOdometry();
-  
 
+  // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a tansform.
+  void publishState(); 
+  
  public:
   Ekf();
   ~Ekf();
