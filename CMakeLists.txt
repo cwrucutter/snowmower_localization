@@ -5,6 +5,8 @@ project(snowmower_localization)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  sensor_msgs
+  snowmower_msgs
   geometry_msgs
   nav_msgs
   roscpp

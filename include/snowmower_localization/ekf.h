@@ -1,5 +1,7 @@
 /* ekf.h */
 #include <ros/ros.h>
+#include <sensor_msgs/Imu.h>
+#include <snowmower_msgs/EncMsg.h>
 #include <Eigen/Core>
 
 #ifndef __EKF_H_INCLUDED__
@@ -16,8 +18,6 @@ class Ekf {
   /*************
     Parameters
   *************/
-  // time interval for system update in seconds
-  double dt_;
   // Wheel Track
   double b_;
   // Left and right encoder ticks per revolution of the wheel
@@ -51,15 +51,17 @@ class Ekf {
     Member Fucntions
   *******************/
   // System update
-  void systemUpdate();
+  void systemUpdate(double dt);
 
   // Map frame measurement updates
   Vector4d  hDecaWave(Vector5d state);
   void measurementUpdateDecaWave(Vector4d z); // z is d1-d4
   
   // Odom frame measurement updates
+  void encSubCB(const snowmower_msgs::EncMsg& msg);
   void measurementUpdateEncoders(Vector2d z); // z is encL and encR
   
+  void imuSubCB(const sensor_msgs::Imu& msg);
   void measurementUpdateIMU(double z); // z is omega_z
   
   void measurementUpdateVisualOdometry();
@@ -67,6 +69,8 @@ class Ekf {
   // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a tansform.
   void publishState(); 
   
+  // Initialization process
+  void init();
  public:
   Ekf();
   ~Ekf();

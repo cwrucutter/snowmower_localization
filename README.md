@@ -6,6 +6,8 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 
 * **DONE** Include publishers and subscribers.
 
+* Remove dependency on boost library in pubState function.
+
 * Add transform broadcaster to pubState function.
 
 * Populate odometry message with Covariances.

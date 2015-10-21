@@ -2,11 +2,12 @@
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 #include <math.h>
+#include <boost/array.hpp>
 #include <Eigen/LU>
 #include "snowmower_localization/ekf.h"
 
 // System update
-void Ekf::systemUpdate(){
+void Ekf::systemUpdate(double dt){
   // Update the state estimate using x_p (the vector) and u
   double x = state_(0);
   double y = state_(1);
@@ -23,37 +24,38 @@ void Ekf::systemUpdate(){
     cf = 1;
   }
   else{
-    cf = sin(omega*dt_/2)/(omega*dt_/2);
+    cf = sin(omega*dt/2)/(omega*dt/2);
   }
   
   // deltaX and deltaY are used a lot later. So, it makes sense to calculate them once now.
-  double deltaX = cf*v*dt_*cos(theta+omega*dt_/2);
-  double deltaY = cf*v*dt_*sin(theta+omega*dt_/2);
+  double deltaX = cf*v*dt*cos(theta+omega*dt/2);
+  double deltaY = cf*v*dt*sin(theta+omega*dt/2);
+  double deltaTheta = omega*dt;
 
   x = x + deltaX;
   y = y + deltaY;
-  theta = theta + omega*dt_;
+  theta = theta + deltaTheta;
   v = v;
   omega = omega;
 
   state_ << x, y, theta, v, omega;
 
   // Calculate F (using the updated state variables)
-  double F13 =  -2*v*sin(omega*dt_/2)*sin(omega*dt_/2+theta)/omega;
-  double F14 =   2 * sin(omega*dt_/2)*cos(omega*dt_/2+theta)/omega;
-  double F23 =   2*v*sin(omega*dt_/2)*cos(omega*dt_/2+theta)/omega;
-  double F24 =   2 * sin(omega*dt_/2)*sin(omega*dt_/2+theta)/omega;
-  double F15 = v*dt_*cos(omega *dt_/2)*cos(omega*dt_/2+theta)/omega - 
-                 2*v*sin(omega*dt_/2)*cos(omega*dt_/2+theta)/pow(omega,2) -
-	       v*dt_*sin(omega*dt_/2)*sin(omega*dt_/2+theta)/omega;
-  double F25 = v*dt_*sin(omega*dt_/2)*cos(omega*dt_/2+theta)/omega - 
-                 2*v*sin(omega*dt_/2)*sin(omega*dt_/2+theta)/pow(omega,2) -
-	       v*dt_*cos(omega*dt_/2)*sin(omega*dt_/2+theta)/omega;
+  double F13 =  -2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
+  double F14 =   2 * sin(omega*dt/2)*cos(omega*dt/2+theta)/omega;
+  double F23 =   2*v*sin(omega*dt/2)*cos(omega*dt/2+theta)/omega;
+  double F24 =   2 * sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
+  double F15 =  v*dt*cos(omega*dt/2)*cos(omega*dt/2+theta)/omega - 
+                 2*v*sin(omega*dt/2)*cos(omega*dt/2+theta)/pow(omega,2) -
+	        v*dt*sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
+  double F25 =  v*dt*sin(omega*dt/2)*cos(omega*dt/2+theta)/omega - 
+                 2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/pow(omega,2) -
+	        v*dt*cos(omega*dt/2)*sin(omega*dt/2+theta)/omega;
   // And construct the final matrix
   MatrixXd F(5,5);
   F << 1,   0, F13, F14, F15,
        0,   1, F23, F24, F25,
-       0,   0,   1,   0, dt_,
+       0,   0,   1,   0,  dt,
        0,   0,   0,   1,   0,
        0,   0,   0,   0,   1;
 
@@ -102,6 +104,16 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   cov_ = cov_ - K*H*cov_;
 };
 
+void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
+
+}
+
+void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
+
+}
+
+
+
   // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a transform.
 void Ekf::publishState(){
   // Create an Odometry message to publish
@@ -117,15 +129,16 @@ void Ekf::publishState(){
   state_msg.pose.pose.position.y = state_(1); // y
   state_msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(state_(2)); // theta
 
+  boost::array<double,36> temp;
   // Populate the covariance matrix
-  state_msg.pose.covariance = 0;
+  state_msg.pose.covariance = temp;
 
   // Populate the linear and angular velocities
   state_msg.twist.twist.linear.x = state_(3); // v
   state_msg.twist.twist.angular.z = state_(4); // omega
 
   // Populate the covariance matrix
-  state_msg.twist.covariance = 0;
+  state_msg.twist.covariance = temp;
 
   // Publish the message!
   statePub_.publish(state_msg);
@@ -134,20 +147,8 @@ void Ekf::publishState(){
 
 } 
 
-
-/* Constructor */
-Ekf::Ekf(): private_nh_("~") {
-
-  // Create a publisher object to publish the determined state of the robot. Odometry messages contain both Pose and Twist with covariance. In this simulator, we will not worry about the covariance.
-  statePub_ = n.advertise<nav_msgs::Odometry>("odom_ekf",1);
-
-  // Create a subscriber object to subscribe to the topic 
-  imuSub_ = n.subscribe("imu/data",1,imuSubCB);
-  encSub_ = n.subscribe("enc",1,encSubCB);
-
-  // Set dt_
-  dt_ = 0.001;
-
+void Ekf::init(){
+  // System Model Covariance Matrix
   Q_ << 0.01, 0,    0,    0,    0,
         0,    0.01, 0,    0,    0,
         0,    0,    0.01, 0,    0,
@@ -169,6 +170,25 @@ Ekf::Ekf(): private_nh_("~") {
                 0.0, 0.0, 0.1, 0.0,
                 0.0, 0.0, 0.0, 0.1;
 
+  // Wheel Track Width (in meteres)
+  b_ = .7;
+  // Encoder ticks per revolutions (left and right)
+  tprRight_ = 50000;
+  tprLeft_  = 50000;
+
+}
+
+/* Constructor */
+Ekf::Ekf(): private_nh_("~") {
+
+  // Create a publisher object to publish the determined state of the robot. Odometry messages contain both Pose and Twist with covariance. In this simulator, we will not worry about the covariance.
+  statePub_ = public_nh_.advertise<nav_msgs::Odometry>("odom_ekf",1);
+
+  // Create a subscriber object to subscribe to the topic 
+  imuSub_ = public_nh_.subscribe("imu/data",1,&Ekf::imuSubCB,this);
+  encSub_ = public_nh_.subscribe("enc",1,&Ekf::encSubCB,this);
+
+  init();
 
 };
 
