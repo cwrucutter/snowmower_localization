@@ -21,9 +21,9 @@ class Ekf {
   *************/
   // Wheel Track
   double b_;
-  // Left and right encoder ticks per revolution of the wheel
-  int tprRight_;
-  int tprLeft_;
+  // Left and right encoder ticks per meter traveled
+  int tpmRight_;
+  int tpmLeft_;
 
   // System Model Covariance Matrix
   Matrix5d Q_;

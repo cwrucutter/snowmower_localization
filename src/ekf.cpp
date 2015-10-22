@@ -126,6 +126,7 @@ void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 
 // 1. h(x)
 Vector2d Ekf::hEnc(Vector5d state){
+
   Vector2d h;
   return h;
 }
@@ -246,9 +247,11 @@ void Ekf::init(){
   // Wheel Track Width (in meteres)
   b_ = .7;
   // Encoder ticks per revolutions (left and right)
-  tprRight_ = 50000;
-  tprLeft_  = 50000;
+  tpmRight_ = 50000;
+  tpmLeft_  = 50000;
 
+  // Initialize lastTime_
+  // State should also be initialized
   lastTime_ = ros::Time::now();
 }
 
