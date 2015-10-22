@@ -20,9 +20,11 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 
 * **DONE** Code decawave measurement model.
 
+* Add offset to decawave (base_decawave is not at base_link!).
+
 * Verify decawave measurement model.
 
-* Code up IMU measurement model.
+* **DONE** Code up IMU measurement model.
 
 * Verify IMU measurement model.
 

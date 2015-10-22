@@ -32,6 +32,7 @@ class Ekf {
   double dw1x_, dw1y_, dw2x_, dw2y_, dw3x_, dw3y_, dw4x_, dw4y_;
   // Decawave Covariance Matrix
   Matrix4d RDecaWave_;
+  double RIMU_;
 
   /*******************
     Member Variables
@@ -64,9 +65,11 @@ class Ekf {
   
   // Odom frame measurement updates
   void encSubCB(const snowmower_msgs::EncMsg& msg);
+  Vector2d hEnc(Vector5d state);
   void measurementUpdateEncoders(Vector2d z); // z is encL and encR
   
   void imuSubCB(const sensor_msgs::Imu& msg);
+  double hIMU(Vector5d state);
   void measurementUpdateIMU(double z); // z is omega_z
   
   void measurementUpdateVisualOdometry();

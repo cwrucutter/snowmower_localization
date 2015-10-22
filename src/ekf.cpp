@@ -62,17 +62,25 @@ void Ekf::systemUpdate(double dt){
   cov_ = F*cov_*F.transpose() + Q_;
 }
 
+/***********************
+ Equations for DecaWave
+ 1. h(x)
+ 2. measurement update
+ 3. callback function
+***********************/
 
+// 1. h(x)
 Vector4d  Ekf::hDecaWave(Vector5d state) {
   double d1 = sqrt(pow(dw1x_-state(0),2)+pow(dw1y_-state(1),2));
   double d2 = sqrt(pow(dw2x_-state(0),2)+pow(dw2y_-state(1),2));
   double d3 = sqrt(pow(dw3x_-state(0),2)+pow(dw3y_-state(1),2));
   double d4 = sqrt(pow(dw4x_-state(0),2)+pow(dw4y_-state(1),2));
-  Vector4d z;
-  z << d1, d2, d3, d4;
-  return z;
+  Vector4d h;
+  h << d1, d2, d3, d4;
+  return h;
 }
 
+// 2. measurement update
 void Ekf::measurementUpdateDecaWave(Vector4d z){
   double x = state_(0);
   double y = state_(1);
@@ -94,7 +102,7 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
        H41, H42, 0, 0, 0;
 
   // Find Kalman Gain
-  MatrixXd K(5,5);
+  MatrixXd K(5,4);
   K = cov_*H.transpose()*(H*cov_*H.transpose()+RDecaWave_).inverse();
 
   // Find new state
@@ -102,14 +110,64 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
 
   // Find new covariance
   cov_ = cov_ - K*H*cov_;
-};
+}
 
+// 3. callback function
 void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 
 }
 
+/***********************
+ Equations for Encoders
+ 1. h(x)
+ 2. measurement update
+ 3. callback function
+***********************/
+
+// 1. h(x)
+Vector2d Ekf::hEnc(Vector5d state){
+  Vector2d h;
+  return h;
+}
+
+// 2. measurement update
+void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
+
+}
+
+// 3. callback function
 void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
 
+}
+
+/***********************
+ Equations for IMU
+ 1. h(x)
+ 2. measurement update
+ 3. callback function
+***********************/
+
+// 1. h(x)
+double Ekf::hIMU(Vector5d state){
+  return state(4); // return omega
+}
+
+void Ekf::measurementUpdateIMU(double z){ // z is omega_z
+
+  MatrixXd H(1,5);
+  H << 0, 0, 0, 0, 1;
+  // Find Kalman Gain
+  MatrixXd K(5,1);
+  // Must create a 1x1 matrix container for the double RIMU_
+  MatrixXd R(1,1);
+  R << RIMU_;
+  K = cov_*H.transpose()*(H*cov_*H.transpose()+R).inverse();
+
+  // Find new state
+  state_ = state_ + K*(z - hIMU(state_));
+
+  // Find new covariance
+  cov_ = cov_ - K*H*cov_;
 }
 
 void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
@@ -181,6 +239,9 @@ void Ekf::init(){
                 0.0, 0.1, 0.0, 0.0,
                 0.0, 0.0, 0.1, 0.0,
                 0.0, 0.0, 0.0, 0.1;
+
+  // IMU Covariance "Matrix"
+  RIMU_ = .01;
 
   // Wheel Track Width (in meteres)
   b_ = .7;
