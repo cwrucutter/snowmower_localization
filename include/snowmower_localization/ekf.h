@@ -2,6 +2,7 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Imu.h>
 #include <snowmower_msgs/EncMsg.h>
+#include <snowmower_msgs/DecaWaveMsg.h>
 #include <Eigen/Core>
 
 #ifndef __EKF_H_INCLUDED__
@@ -39,6 +40,7 @@ class Ekf {
   ros::NodeHandle public_nh_;
   ros::NodeHandle private_nh_;
   ros::Publisher statePub_;
+  ros::Subscriber dwSub_;
   ros::Subscriber imuSub_;
   ros::Subscriber encSub_;
 
@@ -47,6 +49,8 @@ class Ekf {
   Vector5d state_;
   Matrix5d cov_;
 
+  // Store the time of the last update. This is used to determine dt.
+  ros::Time lastTime_;
   /*******************
     Member Fucntions
   *******************/
@@ -54,6 +58,7 @@ class Ekf {
   void systemUpdate(double dt);
 
   // Map frame measurement updates
+  void dwSubCB(const snowmower_msgs::DecaWaveMsg& msg);
   Vector4d  hDecaWave(Vector5d state);
   void measurementUpdateDecaWave(Vector4d z); // z is d1-d4
   
@@ -65,6 +70,9 @@ class Ekf {
   void measurementUpdateIMU(double z); // z is omega_z
   
   void measurementUpdateVisualOdometry();
+
+  // Determine time since the last time dt() was called.
+  double dt();
 
   // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a tansform.
   void publishState(); 

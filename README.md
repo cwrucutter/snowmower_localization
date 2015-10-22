@@ -30,6 +30,8 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 
 * Verify Encoder measurement model.
 
-* Determine covariance matricies.
+* Determine covariance matricies for system and measurement models.
 
 * Set frame_id and child_frame_id using parameters.
+
+* **DONE** Write code to determine dt (The plan is to run a system and measurement update each time a measurement is recieved.)

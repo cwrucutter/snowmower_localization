@@ -104,6 +104,10 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   cov_ = cov_ - K*H*cov_;
 };
 
+void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
+
+}
+
 void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
 
 }
@@ -112,6 +116,14 @@ void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
 
 }
 
+  // Determine time since the last time dt() was called.
+double Ekf::dt(){
+  ros::Duration dt;
+  ros::Time currentTime = ros::Time::now();
+  dt = currentTime - lastTime_;
+  lastTime_ = currentTime;
+  return dt.toSec();
+}
 
 
   // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a transform.
@@ -176,6 +188,7 @@ void Ekf::init(){
   tprRight_ = 50000;
   tprLeft_  = 50000;
 
+  lastTime_ = ros::Time::now();
 }
 
 /* Constructor */
@@ -185,11 +198,11 @@ Ekf::Ekf(): private_nh_("~") {
   statePub_ = public_nh_.advertise<nav_msgs::Odometry>("odom_ekf",1);
 
   // Create a subscriber object to subscribe to the topic 
+  dwSub_ = public_nh_.subscribe("dw_beacons",1,&Ekf::dwSubCB,this);
   imuSub_ = public_nh_.subscribe("imu/data",1,&Ekf::imuSubCB,this);
   encSub_ = public_nh_.subscribe("enc",1,&Ekf::encSubCB,this);
 
   init();
-
 };
 
 /* Destructor */
