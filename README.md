@@ -12,7 +12,9 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 
 * Populate odometry message with Covariances.
 
-* Create callback functions for subscribers.
+* **DONE** Create callback functions for subscribers.
+
+* Make decawave callback function open to any number of beacons.
 
 * **DONE** Code up the equations for the system model.
 

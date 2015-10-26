@@ -114,7 +114,10 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
 
 // 3. callback function
 void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
-
+  systemUpdate(dt(msg.header.stamp));
+  Vector4d z;
+  z << msg.dist[1], msg.dist[2], msg.dist[3],msg.dist[4];
+  measurementUpdateDecaWave(z);
 }
 
 /***********************
@@ -156,7 +159,10 @@ void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
 
 // 3. callback function
 void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
-
+  systemUpdate(dt(msg.header.stamp));
+  Vector2d z;
+  z << msg.right, msg.left;
+  measurementUpdateEncoders(z);
 }
 
 /***********************
@@ -190,7 +196,9 @@ void Ekf::measurementUpdateIMU(double z){ // z is omega_z
 }
 
 void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
-
+  systemUpdate(dt(msg.header.stamp));
+  double z = msg.angular_velocity.z;
+  measurementUpdateIMU(z);
 }
 
   // Determine time since the last time dt() was called.
