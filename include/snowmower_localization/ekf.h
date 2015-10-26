@@ -75,7 +75,7 @@ class Ekf {
   void measurementUpdateVisualOdometry();
 
   // Determine time since the last time dt() was called.
-  double dt();
+  double dt(ros::Time currentTime);
 
   // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a tansform.
   void publishState(); 
