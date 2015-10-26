@@ -194,9 +194,8 @@ void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
 }
 
   // Determine time since the last time dt() was called.
-double Ekf::dt(){
+double Ekf::dt(ros::Time currentTime){
   ros::Duration dt;
-  ros::Time currentTime = ros::Time::now();
   dt = currentTime - lastTime_;
   lastTime_ = currentTime;
   return dt.toSec();
