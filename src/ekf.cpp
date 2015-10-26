@@ -126,14 +126,32 @@ void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 
 // 1. h(x)
 Vector2d Ekf::hEnc(Vector5d state){
-
   Vector2d h;
+  double h1 = state(3)+b_/2*state(4); // v+(b/2)*omega
+  double h2 = state(3)-b_/2*state(4); // v-(b/2)*omega
+  h << h1, h2;
   return h;
 }
 
 // 2. measurement update
 void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
+  // Calculate H
+  double H15 = b_/2;
+  double H25 = -b_/2;
 
+  MatrixXd H(2,5);
+  H << 0, 0, 0, 1, H15,
+       0, 0, 0, 1, H25;
+
+  // Find Kalman Gain
+  MatrixXd K(5,2);
+  K = cov_*H.transpose()*(H*cov_*H.transpose()+RDecaWave_).inverse();
+
+  // Find new state
+  state_ = state_ + K*(z - hEnc(state_));
+
+  // Find new covariance
+  cov_ = cov_ - K*H*cov_;
 }
 
 // 3. callback function

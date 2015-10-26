@@ -28,7 +28,7 @@ This repository contains an Extended Kalman Filter (EKF) that fuses wheel encode
 
 * Verify IMU measurement model.
 
-* Code up Encoder measurement model.
+* **DONE** Code up Encoder measurement model.
 
 * Verify Encoder measurement model.
 
