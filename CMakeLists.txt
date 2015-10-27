@@ -110,7 +110,8 @@ include_directories(${Eigen_INCLUDE_DIRS})
 
 ## Declare a cpp executable
 # add_executable(snowmower_localization_node src/snowmower_localization_node.cpp)
-add_executable(ekf src/ekf.cpp)
+# add_executable(ekf src/ekf.cpp)
+add_executable(ekf_test src/ekf_test.cpp src/ekf.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -120,7 +121,8 @@ add_executable(ekf src/ekf.cpp)
 # target_link_libraries(snowmower_localization_node
 #   ${catkin_LIBRARIES}
 # )
-target_link_libraries(ekf ${catkin_LIBRARIES})
+# target_link_libraries(ekf ${catkin_LIBRARIES})
+target_link_libraries(ekf_test ${catkin_LIBRARIES})
 
 #############
 ## Install ##

@@ -6,18 +6,28 @@
 #include <Eigen/LU>
 #include "snowmower_localization/ekf.h"
 
-// System update
-void Ekf::systemUpdate(double dt){
+typedef Matrix<double, 5, 1> Vector5d;
+typedef Matrix<double, 5, 5> Matrix5d;
+typedef Matrix<double, 1, 5> Matrix15;
+typedef Matrix<double, 2, 5> Matrix25;
+typedef Matrix<double, 1, 1> Matrix11;
+typedef Matrix<double, 4, 5> Matrix45;
+
+/***********************
+ Equations for System
+ 1. f(x,dt)
+ 2. F(x,dt)
+ 3. system update
+***********************/
+// 1. f(x,dt)
+Vector5d Ekf::fSystem(Vector5d state, double dt){
   // Update the state estimate using x_p (the vector) and u
-  double x = state_(0);
-  double y = state_(1);
-  double theta = state_(2);
-  double v = state_(3);
-  double omega = state_(4);
+  double x = state(0);
+  double y = state(1);
+  double theta = state(2);
+  double v = state(3);
+  double omega = state(4);
 
-  // Update the State
-
-  ////////////////////////////////////////////////////////////
   // First determine the correction factor. This is described in Wang 1988. The limit of cf as omega approaches 0 is 1. The following if statement protects against dividing by zero.
   double cf;
   if (omega == 0){
@@ -38,7 +48,17 @@ void Ekf::systemUpdate(double dt){
   v = v;
   omega = omega;
 
-  state_ << x, y, theta, v, omega;
+  state << x, y, theta, v, omega;
+  return state;
+}
+
+// 2. F(x,dt)
+Matrix5d Ekf::FSystem(Vector5d state, double dt){
+  double x = state(0);
+  double y = state(1);
+  double theta = state(2);
+  double v = state(3);
+  double omega = state(4);
 
   // Calculate F (using the updated state variables)
   double F13 =  -2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
@@ -58,15 +78,26 @@ void Ekf::systemUpdate(double dt){
        0,   0,   1,   0,  dt,
        0,   0,   0,   1,   0,
        0,   0,   0,   0,   1;
+  return F;
+}
 
+// 3. system update
+void Ekf::systemUpdate(double dt){
+  // update state
+  state_ = fSystem(state_,dt);
+  // Then calculate F
+  MatrixXd F(5,5);
+  F = FSystem(state_,dt);
+  // Then update covariance
   cov_ = F*cov_*F.transpose() + Q_;
 }
 
 /***********************
  Equations for DecaWave
  1. h(x)
- 2. measurement update
- 3. callback function
+ 2. H(x)
+ 3. measurement update
+ 4. callback function
 ***********************/
 
 // 1. h(x)
@@ -80,10 +111,10 @@ Vector4d  Ekf::hDecaWave(Vector5d state) {
   return h;
 }
 
-// 2. measurement update
-void Ekf::measurementUpdateDecaWave(Vector4d z){
-  double x = state_(0);
-  double y = state_(1);
+// 2. H(x)
+Matrix45 Ekf::HDecaWave(Vector5d state) {
+  double x = state(0);
+  double y = state(1);
 
   // Calculate H
   double H11 = -pow(pow(dw1x_-x,2)+pow(dw1y_-y,2),-0.5)*(dw1x_-x);
@@ -101,6 +132,17 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
        H31, H32, 0, 0, 0,
        H41, H42, 0, 0, 0;
 
+  return H;
+}
+
+// 3. measurement update
+void Ekf::measurementUpdateDecaWave(Vector4d z){
+  // Determine h and H
+  Vector4d h;
+  h = hDecaWave(state_);
+  MatrixXd H(4,5);
+  H = HDecaWave(state_);
+
   // Find Kalman Gain
   MatrixXd K(5,4);
   K = cov_*H.transpose()*(H*cov_*H.transpose()+RDecaWave_).inverse();
@@ -112,7 +154,7 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   cov_ = cov_ - K*H*cov_;
 }
 
-// 3. callback function
+// 4. callback function
 void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   systemUpdate(dt(msg.header.stamp));
   Vector4d z;
@@ -124,8 +166,9 @@ void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 /***********************
  Equations for Encoders
  1. h(x)
- 2. measurement update
- 3. callback function
+ 2. H(x)
+ 3. measurement update
+ 4. callback function
 ***********************/
 
 // 1. h(x)
@@ -137,8 +180,8 @@ Vector2d Ekf::hEnc(Vector5d state){
   return h;
 }
 
-// 2. measurement update
-void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
+// 2. H(x)
+Matrix25 Ekf::HEnc(Vector5d state){
   // Calculate H
   double H15 = b_/2;
   double H25 = -b_/2;
@@ -146,19 +189,29 @@ void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
   MatrixXd H(2,5);
   H << 0, 0, 0, 1, H15,
        0, 0, 0, 1, H25;
+  return H;
+}
+
+// 3. measurement update
+void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
+  // Determine h and H
+  Vector2d h;
+  h = hEnc(state_);
+  MatrixXd H(2,5);
+  H = HEnc(state_);
 
   // Find Kalman Gain
   MatrixXd K(5,2);
   K = cov_*H.transpose()*(H*cov_*H.transpose()+REnc_).inverse();
 
   // Find new state
-  state_ = state_ + K*(z - hEnc(state_));
+  state_ = state_ + K*(z - h);
 
   // Find new covariance
   cov_ = cov_ - K*H*cov_;
 }
 
-// 3. callback function
+// 4. callback function
 void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
   systemUpdate(dt(msg.header.stamp));
   Vector2d z;
@@ -170,8 +223,9 @@ void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
 /***********************
  Equations for IMU
  1. h(x)
- 2. measurement update
- 3. callback function
+ 2. H(x)
+ 3. measurement update
+ 4. callback function
 ***********************/
 
 // 1. h(x)
@@ -179,15 +233,26 @@ double Ekf::hIMU(Vector5d state){
   return state(4); // return omega
 }
 
-void Ekf::measurementUpdateIMU(double z){ // z is omega_z
-
+// 2. H(x)
+Matrix15 Ekf::HIMU(Vector5d state){
   MatrixXd H(1,5);
   H << 0, 0, 0, 0, 1;
+  return H;
+}
+
+// 3. measurement update
+void Ekf::measurementUpdateIMU(double z){ // z is omega_z
+  // Determine h and H
+  double h;
+  h = hIMU(state_);
+  MatrixXd H(1,5);
+  H = HIMU(state_);
+
   // Find Kalman Gain
-  MatrixXd K(5,1);
   // Must create a 1x1 matrix container for the double RIMU_
   MatrixXd R(1,1);
   R << RIMU_;
+  MatrixXd K(5,1);
   K = cov_*H.transpose()*(H*cov_*H.transpose()+R).inverse();
 
   // Find new state
@@ -197,6 +262,7 @@ void Ekf::measurementUpdateIMU(double z){ // z is omega_z
   cov_ = cov_ - K*H*cov_;
 }
 
+// 4. callback function
 void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
   systemUpdate(dt(msg.header.stamp));
   double z = msg.angular_velocity.z;
@@ -247,6 +313,14 @@ void Ekf::publishState(){
 } 
 
 void Ekf::init(){
+  state_ << 0, 0, 0, 0, 0;
+  cov_ << 0.01, 0,    0,    0,    0,
+          0,    0.01, 0,    0,    0,
+          0,    0,    0.01, 0,    0,
+          0,    0,    0,    0.01, 0,
+          0,    0,    0,    0,    0.01;
+
+
   // System Model Covariance Matrix
   Q_ << 0.01, 0,    0,    0,    0,
         0,    0.01, 0,    0,    0,
@@ -287,6 +361,17 @@ void Ekf::init(){
   lastTime_ = ros::Time::now();
 }
 
+/***********************
+ * Getters and Setters *
+ ***********************/
+Vector5d Ekf::getState() {
+  return state_;
+}
+
+Matrix5d Ekf::getCov() {
+  return cov_;
+}
+
 /* Constructor */
 Ekf::Ekf(): private_nh_("~") {
 
@@ -306,6 +391,7 @@ Ekf::~Ekf() {
 
 };
 
+/*
 int main(int argc, char **argv) {
 
   //Initialize ROS
@@ -318,3 +404,4 @@ int main(int argc, char **argv) {
 
   return 0;
 }
+*/

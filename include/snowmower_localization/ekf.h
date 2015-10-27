@@ -1,9 +1,9 @@
 /* ekf.h */
 #include <ros/ros.h>
+#include <Eigen/Core>
 #include <sensor_msgs/Imu.h>
 #include <snowmower_msgs/EncMsg.h>
 #include <snowmower_msgs/DecaWaveMsg.h>
-#include <Eigen/Core>
 
 #ifndef __EKF_H_INCLUDED__
 #define __EKF_H_INCLUDED__
@@ -14,8 +14,12 @@ class Ekf {
 
  typedef Matrix<double, 5, 1> Vector5d;
  typedef Matrix<double, 5, 5> Matrix5d;
+ typedef Matrix<double, 1, 5> Matrix15;
+ typedef Matrix<double, 2, 5> Matrix25;
+ typedef Matrix<double, 1, 1> Matrix11;
+ typedef Matrix<double, 4, 5> Matrix45;
 
- private:
+ public:
   /*************
     Parameters
   *************/
@@ -57,20 +61,25 @@ class Ekf {
     Member Fucntions
   *******************/
   // System update
+  Vector5d fSystem(Vector5d state, double dt);
+  Matrix5d FSystem(Vector5d state, double dt);
   void systemUpdate(double dt);
 
   // Map frame measurement updates
   void dwSubCB(const snowmower_msgs::DecaWaveMsg& msg);
-  Vector4d  hDecaWave(Vector5d state);
+  Vector4d hDecaWave(Vector5d state);
+  Matrix45 HDecaWave(Vector5d state);
   void measurementUpdateDecaWave(Vector4d z); // z is d1-d4
   
   // Odom frame measurement updates
   void encSubCB(const snowmower_msgs::EncMsg& msg);
   Vector2d hEnc(Vector5d state);
+  Matrix25 HEnc(Vector5d state);
   void measurementUpdateEncoders(Vector2d z); // z is encL and encR
   
   void imuSubCB(const sensor_msgs::Imu& msg);
   double hIMU(Vector5d state);
+  Matrix15 HIMU(Vector5d state);
   void measurementUpdateIMU(double z); // z is omega_z
   
   void measurementUpdateVisualOdometry();
@@ -83,10 +92,14 @@ class Ekf {
   
   // Initialization process
   void init();
- public:
+
+  //public:
   Ekf();
   ~Ekf();
 
+  // Getters and Setters
+  Vector5d getState(); // Returns state vector
+  Matrix5d getCov();   // Returns covariance matrix
 };
 
 #endif
