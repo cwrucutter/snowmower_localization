@@ -118,6 +118,7 @@ void Ekf::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   Vector4d z;
   z << msg.dist[1], msg.dist[2], msg.dist[3],msg.dist[4];
   measurementUpdateDecaWave(z);
+  publishState();
 }
 
 /***********************
@@ -148,7 +149,7 @@ void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
 
   // Find Kalman Gain
   MatrixXd K(5,2);
-  K = cov_*H.transpose()*(H*cov_*H.transpose()+RDecaWave_).inverse();
+  K = cov_*H.transpose()*(H*cov_*H.transpose()+REnc_).inverse();
 
   // Find new state
   state_ = state_ + K*(z - hEnc(state_));
@@ -163,6 +164,7 @@ void Ekf::encSubCB(const snowmower_msgs::EncMsg& msg){
   Vector2d z;
   z << msg.right, msg.left;
   measurementUpdateEncoders(z);
+  publishState();
 }
 
 /***********************
@@ -199,6 +201,7 @@ void Ekf::imuSubCB(const sensor_msgs::Imu& msg){
   systemUpdate(dt(msg.header.stamp));
   double z = msg.angular_velocity.z;
   measurementUpdateIMU(z);
+  publishState();
 }
 
   // Determine time since the last time dt() was called.
@@ -265,6 +268,10 @@ void Ekf::init(){
                 0.0, 0.1, 0.0, 0.0,
                 0.0, 0.0, 0.1, 0.0,
                 0.0, 0.0, 0.0, 0.1;
+
+  // Encoder Covariance Matrix
+  REnc_ << 0.1, 0.0,
+           0.0, 0.1;
 
   // IMU Covariance "Matrix"
   RIMU_ = .01;

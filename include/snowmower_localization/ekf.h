@@ -32,6 +32,7 @@ class Ekf {
   double dw1x_, dw1y_, dw2x_, dw2y_, dw3x_, dw3y_, dw4x_, dw4y_;
   // Decawave Covariance Matrix
   Matrix4d RDecaWave_;
+  Matrix2d REnc_;
   double RIMU_;
 
   /*******************
