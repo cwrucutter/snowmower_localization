@@ -25,3 +25,49 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 
+#include <ros/ros.h>
+#include <sensor_msgs/Imu.h>
+#include <snowmower_msgs/EncMsg.h>
+#include <snowmower_msgs/DecaWaveMsg.h>
+#include "snowmower_localization/ekf.h"
+
+#ifndef __EKF_NODE_H_INCLUDED__
+#define __EKF_NODE_H_INCLUDED__
+
+class EkfNode {
+
+ private:
+  Ekf ekf_;
+
+  // Node specific stuff
+  ros::NodeHandle public_nh_;
+  ros::NodeHandle private_nh_;
+  ros::Publisher statePub_;
+  ros::Subscriber dwSub_;
+  ros::Subscriber imuSub_;
+  ros::Subscriber encSub_;
+
+  // Sensor callback functions
+  void dwSubCB(const snowmower_msgs::DecaWaveMsg& msg);
+  void encSubCB(const snowmower_msgs::EncMsg& msg);
+  void imuSubCB(const sensor_msgs::Imu& msg);
+
+  // Publish the state as an odom message on the topic odom_ekf. Also well broadcast a tansform.
+  void publishState(); 
+
+  // Store the time of the last update. This is used to determine dt.
+  ros::Time lastTime_;
+
+  // Determine time since the last time dt() was called.
+  double dt(ros::Time currentTime);
+
+  
+  // Initialization process
+  void init();
+
+ public:
+  EkfNode();
+  ~EkfNode();
+};
+
+#endif
