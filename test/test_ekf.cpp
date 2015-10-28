@@ -26,14 +26,33 @@ SOFTWARE.
 ******************************************************************************/
 
 #include <limits.h>
+#include <cmath>
 #include <gtest/gtest.h>
+// #include <eigen-checks/gtest.h>
 #include "snowmower_localization/ekf.h"
 
 TEST(fSystemTest, PosVelZeroOmega) {
-  EXPECT_EQ(0,0.1);
+  Ekf ekf;
+  Eigen::MatrixXd state(5,1);
+  Eigen::MatrixXd stateNew(5,1);
+  double dt;
+
+  state << 0, 0, 0, 10, 0;
+  dt = 0.1;
+  stateNew << 1, 0, 0, 10, 0;
+  EXPECT_EQ(stateNew,ekf.fSystem(state,dt));
+
+  dt = 10;
+  stateNew << 100, 0, 0, 10, 0;
+  EXPECT_EQ(stateNew,ekf.fSystem(state,dt));
+
+  state << 0, 0, M_PI, 10, 0;
+  dt = 0.1;
+  stateNew << -1, 0, M_PI, 10, 0;
+  EXPECT_EQ(stateNew,ekf.fSystem(state,dt));
 }
 
-int main(int argc, char** argv) {
+GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

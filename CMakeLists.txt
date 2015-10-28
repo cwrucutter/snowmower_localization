@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   std_msgs
   tf
+  eigen_checks
 )
 
 find_package(cmake_modules REQUIRED)
@@ -102,6 +103,7 @@ catkin_package(
 include_directories(include)
 include_directories(${catkin_INCLUDE_DIRS})
 include_directories(${Eigen_INCLUDE_DIRS})
+include_directories(${eigen_checks_INCLUDE_DIRS})
 
 ## Declare a cpp library
 # add_library(snowmower_localization
@@ -122,7 +124,7 @@ add_executable(test_ekf test/test_ekf.cpp src/ekf.cpp)
 #   ${catkin_LIBRARIES}
 # )
 target_link_libraries(ekf_node ${catkin_LIBRARIES})
-target_link_libraries(test_ekf ${catkin_LIBRARIES} gtest)
+target_link_libraries(test_ekf ${catkin_LIBRARIES} eigen_checks gtest)
 
 #############
 ## Install ##
