@@ -1,7 +1,15 @@
 # snowmower_localization
 This repository contains an Extended Kalman Filter (EKF) that fuses wheel encoder, IMU, visual odometry, and DecaWave beacon measurements, along with a model of differential drive vehicle kinematics, into an estimation of the robots location.
 
-## To Do ##
+## Tests
+In order to do unit tests on Eigen Matrix objects with meaningful output in the case of a failure, the following packages must be added to your workspace:
+* [eigen_checks](https://github.com/ethz-asl/eigen_checks)
+
+* [glog_catkin](https://github.com/ethz-asl/glog_catkin)
+
+* [catkin_simple](https://github.com/catkin/catkin_simple)
+
+## To Do
 * **DONE** Create an EKF class.
 
 * **DONE** Include publishers and subscribers.
