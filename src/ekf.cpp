@@ -88,8 +88,6 @@ Vector5d Ekf::fSystem(Vector5d state, double dt){
 
 // 2. F(x,dt)
 Matrix5d Ekf::FSystem(Vector5d state, double dt){
-  double x = state(0);
-  double y = state(1);
   double theta = state(2);
   double v = state(3);
   double omega = state(4);
@@ -154,10 +152,14 @@ Vector4d  Ekf::hDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
   double xOff = DecaWaveOffset(0);
   double yOff = DecaWaveOffset(1);
 
-  double d1 = sqrt(pow(dw1x-x,2)+pow(dw1y-y,2));
-  double d2 = sqrt(pow(dw2x-x,2)+pow(dw2y-y,2));
-  double d3 = sqrt(pow(dw3x-x,2)+pow(dw3y-y,2));
-  double d4 = sqrt(pow(dw4x-x,2)+pow(dw4y-y,2));
+  // Calculate tag location based off robot location, theta, and tag offset
+  double xTag = x + xOff*cos(theta) - yOff*sin(theta);
+  double yTag = y + xOff*sin(theta) + yOff*cos(theta);
+
+  double d1 = sqrt(pow(dw1x-xTag,2)+pow(dw1y-yTag,2));
+  double d2 = sqrt(pow(dw2x-xTag,2)+pow(dw2y-yTag,2));
+  double d3 = sqrt(pow(dw3x-xTag,2)+pow(dw3y-yTag,2));
+  double d4 = sqrt(pow(dw4x-xTag,2)+pow(dw4y-yTag,2));
   Vector4d h;
   h << d1, d2, d3, d4;
   return h;
@@ -181,21 +183,40 @@ Matrix45 Ekf::HDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
   double xOff = DecaWaveOffset(0);
   double yOff = DecaWaveOffset(1);
 
+  // Calculate tag location based off robot location, theta, and tag offset
+  double xTag = x + xOff*cos(theta) - yOff*sin(theta);
+  double yTag = y + xOff*sin(theta) + yOff*cos(theta);
+
   // Calculate H
-  double H11 = -pow(pow(dw1x-x,2)+pow(dw1y-y,2),-0.5)*(dw1x-x);
-  double H12 = -pow(pow(dw1x-x,2)+pow(dw1y-y,2),-0.5)*(dw1y-y);
-  double H21 = -pow(pow(dw2x-x,2)+pow(dw2y-y,2),-0.5)*(dw2x-x);
-  double H22 = -pow(pow(dw2x-x,2)+pow(dw2y-y,2),-0.5)*(dw2y-y);
-  double H31 = -pow(pow(dw3x-x,2)+pow(dw3y-y,2),-0.5)*(dw3x-x);
-  double H32 = -pow(pow(dw3x-x,2)+pow(dw3y-y,2),-0.5)*(dw3y-y);
-  double H41 = -pow(pow(dw4x-x,2)+pow(dw4y-y,2),-0.5)*(dw4x-x);
-  double H42 = -pow(pow(dw4x-x,2)+pow(dw4y-y,2),-0.5)*(dw4y-y);
+  double H11 = -pow(pow(dw1x-xTag,2)+pow(dw1y-yTag,2),-0.5)*(dw1x-xTag);
+  double H12 = -pow(pow(dw1x-xTag,2)+pow(dw1y-yTag,2),-0.5)*(dw1y-yTag);
+  double H13 =  pow(pow(dw1x-xTag,2)+pow(dw1y-yTag,2),-0.5)
+    *((dw1x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+     +(dw1y-yTag)*(-xOff*sin(theta) + yOff*sin(theta)));
+
+  double H21 = -pow(pow(dw2x-xTag,2)+pow(dw2y-yTag,2),-0.5)*(dw2x-xTag);
+  double H22 = -pow(pow(dw2x-xTag,2)+pow(dw2y-yTag,2),-0.5)*(dw2y-yTag);
+  double H23 =  pow(pow(dw2x-xTag,2)+pow(dw2y-yTag,2),-0.5)
+    *((dw2x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+     +(dw2y-yTag)*(-xOff*sin(theta) + yOff*sin(theta)));
+
+  double H31 = -pow(pow(dw3x-xTag,2)+pow(dw3y-yTag,2),-0.5)*(dw3x-xTag);
+  double H32 = -pow(pow(dw3x-xTag,2)+pow(dw3y-yTag,2),-0.5)*(dw3y-yTag);
+  double H33 =  pow(pow(dw3x-xTag,2)+pow(dw3y-yTag,2),-0.5)
+    *((dw3x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+     +(dw3y-yTag)*(-xOff*sin(theta) + yOff*sin(theta)));
+
+  double H41 = -pow(pow(dw4x-xTag,2)+pow(dw4y-yTag,2),-0.5)*(dw4x-xTag);
+  double H42 = -pow(pow(dw4x-xTag,2)+pow(dw4y-yTag,2),-0.5)*(dw4y-yTag);
+  double H43 =  pow(pow(dw4x-xTag,2)+pow(dw4y-yTag,2),-0.5)
+    *((dw4x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+     +(dw4y-yTag)*(-xOff*sin(theta) + yOff*sin(theta)));
 
   MatrixXd H(4,5);
-  H << H11, H12, 0, 0, 0,
-       H21, H22, 0, 0, 0,
-       H31, H32, 0, 0, 0,
-       H41, H42, 0, 0, 0;
+  H << H11, H12, H13, 0, 0,
+       H21, H22, H23, 0, 0,
+       H31, H32, H33, 0, 0,
+       H41, H42, H43, 0, 0;
 
   return H;
 }

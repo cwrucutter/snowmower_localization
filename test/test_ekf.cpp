@@ -152,6 +152,39 @@ TEST(fSystemTest, drawCircles) {
 
 }
 
+TEST(hDecaWaveTest, 3_4_5_Grid) {
+  Ekf ekf;
+  Eigen::MatrixXd state(5,1);
+
+  MatrixXd DecaWaveBeaconLoc(4,2);
+  Vector2d DecaWaveOffset;
+
+  // Set up a grid of 4 3-4-5 triangles.
+  // When beacon is in the middle, all distances will be 5. 
+  DecaWaveBeaconLoc << 0.0, 0.0,
+                       6.0, 0.0,
+                       6.0, 8.0,
+                       0.0, 8.0;
+  Vector4d h;
+  h << 5.0, 5.0, 5.0, 5.0;
+
+  // Start with zero offset and robot in middle
+  DecaWaveOffset << 0.0, 0.0;
+  state << 3.0, 4.0, 0.0, 0.0, 0.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+
+  // Offset the decawave and offset the robot
+  DecaWaveOffset << -1.0, -2.0;
+  state << 4.0, 6.0, 0.0, 0.0, 0.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+
+  // Now also offset the angle
+  DecaWaveOffset << -1.0, -2.0;
+  state << 1.0, 5.0, M_PI_2, 0.0, 0.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+}
+
+
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
