@@ -74,6 +74,10 @@ Vector5d Ekf::fSystem(Vector5d state, double dt){
   x = x + deltaX;
   y = y + deltaY;
   theta = theta + deltaTheta;
+  // Force theta to lie in the interval [-PI, PI)
+  theta = fmod(theta + M_PI, 2.0 * M_PI) - M_PI;
+  if (theta < -M_PI)
+    theta += 2.0 * M_PI;
   v = v;
   omega = omega;
 

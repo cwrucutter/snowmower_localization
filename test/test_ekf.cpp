@@ -48,7 +48,7 @@ TEST(fSystemTest, PosVelZeroOmega) {
 
   state << 0, 0, M_PI, 10, 0;
   dt = 0.1;
-  stateNew << -1, 0, M_PI, 10, 0;
+  stateNew << -1, 0, -M_PI, 10, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
   state << 0, 0, M_PI_4, 10, 0;
@@ -63,12 +63,12 @@ TEST(fSystemTest, PosVelZeroOmega) {
 
   state << 0, 0, 5*M_PI_4, 10, 0;
   dt = 0.1;
-  stateNew << -sqrt(2)/2, -sqrt(2)/2, 5*M_PI_4, 10, 0;
+  stateNew << -sqrt(2)/2, -sqrt(2)/2, -3*M_PI_4, 10, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
   state << 0, 0, 7*M_PI_4, 10, 0;
   dt = 0.1;
-  stateNew << sqrt(2)/2, -sqrt(2)/2, 7*M_PI_4, 10, 0;
+  stateNew << sqrt(2)/2, -sqrt(2)/2, -M_PI_4, 10, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 }
 
@@ -89,7 +89,7 @@ TEST(fSystemTest, NegVelZeroOmega) {
 
   state << 0, 0, M_PI, -10, 0;
   dt = 0.1;
-  stateNew << 1, 0, M_PI, -10, 0;
+  stateNew << 1, 0, -M_PI, -10, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
   state << 0, 0, M_PI_4, -10, 0;
@@ -104,12 +104,12 @@ TEST(fSystemTest, NegVelZeroOmega) {
 
   state << 0, 0, 5*M_PI_4, -10, 0;
   dt = 0.1;
-  stateNew << sqrt(2)/2, sqrt(2)/2, 5*M_PI_4, -10, 0;
+  stateNew << sqrt(2)/2, sqrt(2)/2, -3*M_PI_4, -10, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
   state << 0, 0, 7*M_PI_4, -10, 0;
   dt = 0.1;
-  stateNew << -sqrt(2)/2, sqrt(2)/2, 7*M_PI_4, -10, 0;
+  stateNew << -sqrt(2)/2, sqrt(2)/2, -M_PI_4, -10, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 }
 
@@ -121,8 +121,35 @@ TEST(fSystemTest, ZeroVelNonZeroOmega) {
 
   state << 0, 0, 0, 0, M_PI;
   dt = 1;
-  stateNew << 0, 0, M_PI, 0, M_PI;
+  stateNew << 0, 0, -M_PI, 0, M_PI;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+
+  state << 0, 0, 0, 0, M_PI;
+  dt = 2;
+  stateNew << 0, 0, 0, 0, M_PI;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+
+}
+
+TEST(fSystemTest, drawCircles) {
+  Ekf ekf;
+  Eigen::MatrixXd state(5,1);
+  Eigen::MatrixXd stateNew(5,1);
+
+  double omega = 1;
+  double v = 2.5;
+  double r = v/omega;
+  double c = 2*M_PI*r;
+  double dt = c/v;
+
+  state << 0, 0, 0, v, omega;
+  stateNew << 0, 0, 0, v, omega;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+
+  state << 0, 0, 0, v, -omega;
+  stateNew << 0, 0, 0, v, -omega;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+
 }
 
 GTEST_API_ int main(int argc, char** argv) {
