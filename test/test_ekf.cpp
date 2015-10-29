@@ -28,7 +28,7 @@ SOFTWARE.
 #include <limits.h>
 #include <cmath>
 #include <gtest/gtest.h>
-// #include <eigen-checks/gtest.h>
+#include <eigen-checks/gtest.h>
 #include "snowmower_localization/ekf.h"
 
 TEST(fSystemTest, PosVelZeroOmega) {
@@ -49,7 +49,18 @@ TEST(fSystemTest, PosVelZeroOmega) {
   state << 0, 0, M_PI, 10, 0;
   dt = 0.1;
   stateNew << -1, 0, M_PI, 10, 0;
-  EXPECT_EQ(stateNew,ekf.fSystem(state,dt));
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
+
+  state << 0, 0, M_PI_4, 10, 0;
+  dt = 0.1;
+  stateNew << sqrt(2)/2, sqrt(2)/2, M_PI_4, 10, 0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
+
+  state << 0, 0, 3*M_PI_4, 10, 0;
+  dt = 0.1;
+  stateNew << -sqrt(2)/2, sqrt(2)/2, 3*M_PI_4, 10, 0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
+
 }
 
 GTEST_API_ int main(int argc, char** argv) {
