@@ -26,21 +26,31 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Code up the equations for the system model.
 
-* Verify system model.
+* **DONE** Write tests for system f.
+
+* Write tests for system F
 
 * **DONE** Code decawave measurement model.
 
-* Add offset to decawave (base_decawave is not at base_link!).
+* **DONE** Add offset to decawave (base_decawave is not at base_link!).
 
-* Verify decawave measurement model.
+* **DONE** Write tests for decawave h.
+
+* Write tests for decawave H.
 
 * **DONE** Code up IMU measurement model.
 
-* Verify IMU measurement model.
+* Add IMU bias as a state.
+
+* Write tests for IMU h.
+
+* Write tests for IMU H.
 
 * **DONE** Code up Encoder measurement model.
 
-* Verify Encoder measurement model.
+* Write tests for Encoder h.
+
+* Write tests for Encoder H.
 
 * Determine covariance matricies for system and measurement models.
 
