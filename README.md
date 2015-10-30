@@ -54,6 +54,8 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * Determine covariance matricies for system and measurement models.
 
+* Make Covariance matricies variable, a la Eric Perko.
+
 * Set frame_id and child_frame_id using parameters.
 
 * **DONE** Write code to determine dt (The plan is to run a system and measurement update each time a measurement is recieved.)
