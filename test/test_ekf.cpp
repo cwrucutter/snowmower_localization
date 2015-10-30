@@ -33,108 +33,108 @@ SOFTWARE.
 
 TEST(fSystemTest, PosVelZeroOmega) {
   Ekf ekf;
-  Eigen::MatrixXd state(5,1);
-  Eigen::MatrixXd stateNew(5,1);
+  Eigen::MatrixXd state(6,1);
+  Eigen::MatrixXd stateNew(6,1);
   double dt;
 
-  state << 0, 0, 0, 10, 0;
+  state << 0, 0, 0, 10, 0, 0;
   dt = 0.1;
-  stateNew << 1, 0, 0, 10, 0;
+  stateNew << 1, 0, 0, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
   dt = 10;
-  stateNew << 100, 0, 0, 10, 0;
+  stateNew << 100, 0, 0, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
-  state << 0, 0, M_PI, 10, 0;
+  state << 0, 0, M_PI, 10, 0, 0;
   dt = 0.1;
-  stateNew << -1, 0, -M_PI, 10, 0;
+  stateNew << -1, 0, -M_PI, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, M_PI_4, 10, 0;
+  state << 0, 0, M_PI_4, 10, 0, 0;
   dt = 0.1;
-  stateNew << sqrt(2)/2, sqrt(2)/2, M_PI_4, 10, 0;
+  stateNew << sqrt(2)/2, sqrt(2)/2, M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, 3*M_PI_4, 10, 0;
+  state << 0, 0, 3*M_PI_4, 10, 0, 0;
   dt = 0.1;
-  stateNew << -sqrt(2)/2, sqrt(2)/2, 3*M_PI_4, 10, 0;
+  stateNew << -sqrt(2)/2, sqrt(2)/2, 3*M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, 5*M_PI_4, 10, 0;
+  state << 0, 0, 5*M_PI_4, 10, 0, 0;
   dt = 0.1;
-  stateNew << -sqrt(2)/2, -sqrt(2)/2, -3*M_PI_4, 10, 0;
+  stateNew << -sqrt(2)/2, -sqrt(2)/2, -3*M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, 7*M_PI_4, 10, 0;
+  state << 0, 0, 7*M_PI_4, 10, 0, 0;
   dt = 0.1;
-  stateNew << sqrt(2)/2, -sqrt(2)/2, -M_PI_4, 10, 0;
+  stateNew << sqrt(2)/2, -sqrt(2)/2, -M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 }
 
 TEST(fSystemTest, NegVelZeroOmega) {
   Ekf ekf;
-  Eigen::MatrixXd state(5,1);
-  Eigen::MatrixXd stateNew(5,1);
+  Eigen::MatrixXd state(6,1);
+  Eigen::MatrixXd stateNew(6,1);
   double dt;
 
-  state << 0, 0, 0, -10, 0;
+  state << 0, 0, 0, -10, 0, 0;
   dt = 0.1;
-  stateNew << -1, 0, 0, -10, 0;
+  stateNew << -1, 0, 0, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
   dt = 10;
-  stateNew << -100, 0, 0, -10, 0;
+  stateNew << -100, 0, 0, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
-  state << 0, 0, M_PI, -10, 0;
+  state << 0, 0, M_PI, -10, 0, 0;
   dt = 0.1;
-  stateNew << 1, 0, -M_PI, -10, 0;
+  stateNew << 1, 0, -M_PI, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, M_PI_4, -10, 0;
+  state << 0, 0, M_PI_4, -10, 0, 0;
   dt = 0.1;
-  stateNew << -sqrt(2)/2, -sqrt(2)/2, M_PI_4, -10, 0;
+  stateNew << -sqrt(2)/2, -sqrt(2)/2, M_PI_4, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, 3*M_PI_4, -10, 0;
+  state << 0, 0, 3*M_PI_4, -10, 0, 0;
   dt = 0.1;
-  stateNew << sqrt(2)/2, -sqrt(2)/2, 3*M_PI_4, -10, 0;
+  stateNew << sqrt(2)/2, -sqrt(2)/2, 3*M_PI_4, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, 5*M_PI_4, -10, 0;
+  state << 0, 0, 5*M_PI_4, -10, 0, 0;
   dt = 0.1;
-  stateNew << sqrt(2)/2, sqrt(2)/2, -3*M_PI_4, -10, 0;
+  stateNew << sqrt(2)/2, sqrt(2)/2, -3*M_PI_4, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
-  state << 0, 0, 7*M_PI_4, -10, 0;
+  state << 0, 0, 7*M_PI_4, -10, 0, 0;
   dt = 0.1;
-  stateNew << -sqrt(2)/2, sqrt(2)/2, -M_PI_4, -10, 0;
+  stateNew << -sqrt(2)/2, sqrt(2)/2, -M_PI_4, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 }
 
 TEST(fSystemTest, ZeroVelNonZeroOmega) {
   Ekf ekf;
-  Eigen::MatrixXd state(5,1);
-  Eigen::MatrixXd stateNew(5,1);
+  Eigen::MatrixXd state(6,1);
+  Eigen::MatrixXd stateNew(6,1);
   double dt;
 
-  state << 0, 0, 0, 0, M_PI;
+  state << 0, 0, 0, 0, M_PI,  0;
   dt = 1;
-  stateNew << 0, 0, -M_PI, 0, M_PI;
+  stateNew << 0, 0, -M_PI, 0, M_PI, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
-  state << 0, 0, 0, 0, M_PI;
+  state << 0, 0, 0, 0, M_PI, 0;
   dt = 2;
-  stateNew << 0, 0, 0, 0, M_PI;
+  stateNew << 0, 0, 0, 0, M_PI, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
 }
 
 TEST(fSystemTest, drawCircles) {
   Ekf ekf;
-  Eigen::MatrixXd state(5,1);
-  Eigen::MatrixXd stateNew(5,1);
+  Eigen::MatrixXd state(6,1);
+  Eigen::MatrixXd stateNew(6,1);
 
   double omega = 1;
   double v = 2.5;
@@ -142,19 +142,19 @@ TEST(fSystemTest, drawCircles) {
   double c = 2*M_PI*r;
   double dt = c/v;
 
-  state << 0, 0, 0, v, omega;
-  stateNew << 0, 0, 0, v, omega;
+  state << 0, 0, 0, v, omega, 0;
+  stateNew << 0, 0, 0, v, omega, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
-  state << 0, 0, 0, v, -omega;
-  stateNew << 0, 0, 0, v, -omega;
+  state << 0, 0, 0, v, -omega, 0;
+  stateNew << 0, 0, 0, v, -omega, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
 }
 
 TEST(hDecaWaveTest, 3_4_5_Grid) {
   Ekf ekf;
-  Eigen::MatrixXd state(5,1);
+  Eigen::MatrixXd state(6,1);
 
   MatrixXd DecaWaveBeaconLoc(4,2);
   Vector2d DecaWaveOffset;
@@ -170,17 +170,17 @@ TEST(hDecaWaveTest, 3_4_5_Grid) {
 
   // Start with zero offset and robot in middle
   DecaWaveOffset << 0.0, 0.0;
-  state << 3.0, 4.0, 0.0, 0.0, 0.0;
+  state << 3.0, 4.0, 0.0, 0.0, 0.0, 0.0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 
   // Offset the decawave and offset the robot
   DecaWaveOffset << -1.0, -2.0;
-  state << 4.0, 6.0, 0.0, 0.0, 0.0;
+  state << 4.0, 6.0, 0.0, 0.0, 0.0, 0.0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 
   // Now also offset the angle
   DecaWaveOffset << -1.0, -2.0;
-  state << 1.0, 5.0, M_PI_2, 0.0, 0.0;
+  state << 1.0, 5.0, M_PI_2, 0.0, 0.0, 0.0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 }
 

@@ -33,15 +33,20 @@ SOFTWARE.
 #include "snowmower_localization/ekf.h"
 #include <iostream>
 
-typedef Matrix<double, 5, 1> Vector5d;
-typedef Matrix<double, 5, 5> Matrix5d;
-typedef Matrix<double, 1, 5> Matrix15;
-typedef Matrix<double, 2, 5> Matrix25;
-typedef Matrix<double, 5, 2> Matrix52;
-typedef Matrix<double, 1, 1> Matrix11;
-typedef Matrix<double, 4, 5> Matrix45;
-typedef Matrix<double, 5, 4> Matrix54;
-typedef Matrix<double, 4, 2> Matrix42;
+typedef Matrix<double, 6, 1> Vector6d; // state_, fSystem, KIMU, stateUpdate
+typedef Matrix<double, 6, 6> Matrix6d; // cov_, Q_, FSystem, covUpdate
+typedef Matrix<double, 1, 6> Matrix16; // HIMU
+typedef Matrix<double, 2, 6> Matrix26; // HEnc
+typedef Matrix<double, 6, 2> Matrix62; // KEnc
+typedef Matrix<double, 1, 1> Matrix11; // not in use (zIMU, hIMU, RIMU_)
+typedef Matrix<double, 4, 6> Matrix46; // HDW
+typedef Matrix<double, 6, 4> Matrix64; // KDW
+typedef Matrix<double, 4, 2> Matrix42; // Beacon (x,y) locations
+                          // Vector4d  // zDW, hDW
+                          // Matrix4d  // RDW_
+                          // Vector2d  // zEnc, hEnc
+                          // Matrix2d  // REnc
+
 /***********************
  Equations for System
  1. f(x,dt)
@@ -49,13 +54,14 @@ typedef Matrix<double, 4, 2> Matrix42;
  3. System update
 ***********************/
 // 1. f(x,dt)
-Vector5d Ekf::fSystem(Vector5d state, double dt){
+Vector6d Ekf::fSystem(Vector6d state, double dt){
   // Update the state estimate using x_p (the vector) and u
   double x = state(0);
   double y = state(1);
   double theta = state(2);
   double v = state(3);
   double omega = state(4);
+  double bias = state(5);
 
   // First determine the correction factor. This is described in Wang 1988. The limit of cf as omega approaches 0 is 1. The following if statement protects against dividing by zero.
   double cf;
@@ -80,14 +86,15 @@ Vector5d Ekf::fSystem(Vector5d state, double dt){
     theta += 2.0 * M_PI;
   v = v;
   omega = omega;
+  bias = bias;
 
-  MatrixXd stateNew(5,1);
-  stateNew << x, y, theta, v, omega;
+  Vector6d stateNew;
+  stateNew << x, y, theta, v, omega, bias;
   return stateNew;
 }
 
 // 2. F(x,dt)
-Matrix5d Ekf::FSystem(Vector5d state, double dt){
+Matrix6d Ekf::FSystem(Vector6d state, double dt){
   double theta = state(2);
   double v = state(3);
   double omega = state(4);
@@ -104,12 +111,13 @@ Matrix5d Ekf::FSystem(Vector5d state, double dt){
                  2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/pow(omega,2) -
 	        v*dt*cos(omega*dt/2)*sin(omega*dt/2+theta)/omega;
   // And construct the final matrix
-  MatrixXd F(5,5);
-  F << 1,   0, F13, F14, F15,
-       0,   1, F23, F24, F25,
-       0,   0,   1,   0,  dt,
-       0,   0,   0,   1,   0,
-       0,   0,   0,   0,   1;
+  Matrix6d F;
+  F << 1,   0, F13, F14, F15,   0,
+       0,   1, F23, F24, F25,   0,
+       0,   0,   1,   0,  dt,   0,
+       0,   0,   0,   1,   0,   0,
+       0,   0,   0,   0,   1,   0,
+       0,   0,   0,   0,   0,   1; 
   return F;
 }
 
@@ -118,7 +126,7 @@ void Ekf::systemUpdate(double dt){
   // update state
   state_ = fSystem(state_,dt);
   // Then calculate F
-  MatrixXd F(5,5);
+  Matrix6d F;
   F = FSystem(state_,dt);
   // Then update covariance
   cov_ = F*cov_*F.transpose() + Q_;
@@ -135,7 +143,7 @@ void Ekf::systemUpdate(double dt){
 ***********************/
 
 // 1. h(x)
-Vector4d  Ekf::hDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
+Vector4d  Ekf::hDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
 			 Vector2d DecaWaveOffset) {
   // Break out matricies for easier to read equations below
   double x = state(0);
@@ -166,7 +174,7 @@ Vector4d  Ekf::hDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
 }
 
 // 2. H(x)
-Matrix45 Ekf::HDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
+Matrix46 Ekf::HDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
 			 Vector2d DecaWaveOffset) {
   // Break out matricies for easier to read equations below
   double x = state(0);
@@ -212,35 +220,35 @@ Matrix45 Ekf::HDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
     *((dw4x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
      +(dw4y-yTag)*(-xOff*sin(theta) + yOff*sin(theta)));
 
-  MatrixXd H(4,5);
-  H << H11, H12, H13, 0, 0,
-       H21, H22, H23, 0, 0,
-       H31, H32, H33, 0, 0,
-       H41, H42, H43, 0, 0;
+  Matrix46 H;
+  H << H11, H12, H13, 0, 0, 0,
+       H21, H22, H23, 0, 0, 0,
+       H31, H32, H33, 0, 0, 0,
+       H41, H42, H43, 0, 0, 0;
 
   return H;
 }
 
 // 3. Kalman Gain, K
-Matrix54 Ekf::KDecaWave(Matrix5d cov, Matrix45 H, Matrix4d R){
+Matrix64 Ekf::KDecaWave(Matrix6d cov, Matrix46 H, Matrix4d R){
   // Find Kalman Gain
-  MatrixXd K(5,4);
+  Matrix64 K;
   K = cov*H.transpose()*(H*cov*H.transpose()+R).inverse();
   return K;
 }
 
 // 4. State update
-Vector5d Ekf::stateUpdateDecaWave(Vector5d state, Matrix54 K, Vector4d z, Vector4d h){
+Vector6d Ekf::stateUpdateDecaWave(Vector6d state, Matrix64 K, Vector4d z, Vector4d h){
   // Find new state
-  VectorXd stateNew(5,1);
+  Vector6d stateNew;
   stateNew = state + K*(z - h);
   return stateNew;
 }
 
 // 5. Covariance update
-Matrix5d Ekf::covUpdateDecaWave(Matrix5d cov, Matrix54 K, Matrix45 H){
+Matrix6d Ekf::covUpdateDecaWave(Matrix6d cov, Matrix64 K, Matrix46 H){
   // Find new covariance
-  MatrixXd covNew(5,5);
+  Matrix6d covNew;
   covNew = cov - K*H*cov;
   return covNew;
 }
@@ -251,10 +259,10 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   // Determine h and H
   Vector4d h;
   h = hDecaWave(state_, DecaWaveBeaconLoc_, DecaWaveOffset_);
-  MatrixXd H(4,5);
+  Matrix46 H;
   H = HDecaWave(state_, DecaWaveBeaconLoc_, DecaWaveOffset_);
   // Find Kalman Gain
-  MatrixXd K(5,4);
+  Matrix64 K;
   K = KDecaWave(cov_, H, RDecaWave_);
   // Find new state
   state_ = stateUpdateDecaWave(state_, K, z, h);
@@ -273,7 +281,7 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
 ***********************/
 
 // 1. h(x)
-Vector2d Ekf::hEnc(Vector5d state, double b, double tpmRight, double tpmLeft){
+Vector2d Ekf::hEnc(Vector6d state, double b, double tpmRight, double tpmLeft){
   Vector2d h;
   double h1 = state(3)+b_/2*state(4); // v+(b/2)*omega
   double h2 = state(3)-b_/2*state(4); // v-(b/2)*omega
@@ -282,37 +290,37 @@ Vector2d Ekf::hEnc(Vector5d state, double b, double tpmRight, double tpmLeft){
 }
 
 // 2. H(x)
-Matrix25 Ekf::HEnc(Vector5d state, double b, double tpmRight, double tpmLeft){
+Matrix26 Ekf::HEnc(Vector6d state, double b, double tpmRight, double tpmLeft){
   // Calculate H
   double H15 = b_/2;
   double H25 = -b_/2;
 
-  MatrixXd H(2,5);
-  H << 0, 0, 0, 1, H15,
-       0, 0, 0, 1, H25;
+  Matrix26 H;
+  H << 0, 0, 0, 1, H15, 0,
+       0, 0, 0, 1, H25, 0;
   return H;
 }
 
 // 3. Kalman Gain, K
-Matrix52 Ekf::KEnc(Matrix5d cov, Matrix25 H, Matrix2d R){
+Matrix62 Ekf::KEnc(Matrix6d cov, Matrix26 H, Matrix2d R){
   // Find Kalman Gain
-  MatrixXd K(5,2);
+  Matrix62 K;
   K = cov*H.transpose()*(H*cov*H.transpose()+R).inverse();
   return K;
 }
 
 // 4. State update
-Vector5d Ekf::stateUpdateEnc(Vector5d state, Matrix52 K, Vector2d z, Vector2d h){
+Vector6d Ekf::stateUpdateEnc(Vector6d state, Matrix62 K, Vector2d z, Vector2d h){
   // Find new state
-  MatrixXd stateNew(5,1);
+  Vector6d stateNew;
   stateNew = state + K*(z - h);
   return stateNew;
 }
 
 // 5. Covariance update
-Matrix5d Ekf::covUpdateEnc(Matrix5d cov, Matrix52 K, Matrix25 H){
+Matrix6d Ekf::covUpdateEnc(Matrix6d cov, Matrix62 K, Matrix26 H){
   // Find new covariance
-  MatrixXd covNew(5,5);
+  Matrix6d covNew;
   covNew = cov - K*H*cov;
   return covNew;
 }
@@ -323,10 +331,10 @@ void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
   // Determine h and H
   Vector2d h;
   h = hEnc(state_, b_, tpmRight_, tpmLeft_);
-  MatrixXd H(2,5);
+  Matrix26 H;
   H = HEnc(state_, b_, tpmRight_, tpmLeft_);
   // Find Kalman Gain
-  MatrixXd K(5,2);
+  Matrix62 K;
   K = KEnc(cov_, H, REnc_);
   // Find new state
   state_ = stateUpdateEnc(state_, K, z, h);
@@ -345,40 +353,40 @@ void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
 ***********************/
 
 // 1. h(x)
-double Ekf::hIMU(Vector5d state){
-  return state(4); // return omega
+double Ekf::hIMU(Vector6d state){
+  return state(4) + state(5); // return omega + bias
 }
 
 // 2. H(x)
-Matrix15 Ekf::HIMU(Vector5d state){
-  MatrixXd H(1,5);
-  H << 0, 0, 0, 0, 1;
+Matrix16 Ekf::HIMU(Vector6d state){
+  Matrix16 H;
+  H << 0, 0, 0, 0, 1, 1;
   return H;
 }
 
 // 3. Kalman Gain, K
-Vector5d Ekf::KIMU(Matrix5d cov, Matrix15 H, double R){
+Vector6d Ekf::KIMU(Matrix6d cov, Matrix16 H, double R){
   // Find Kalman Gain
   // Must create a 1x1 matrix container for the double RIMU_
   MatrixXd RMatrix(1,1);
   RMatrix << R;
-  MatrixXd K(5,1);
+  Vector6d K;
   K = cov*H.transpose()*(H*cov*H.transpose()+RMatrix).inverse();
   return K;
 }
 
 // 4. State update
-Vector5d Ekf::stateupdateIMU(Vector5d state, Vector5d K, double z, double h){
+Vector6d Ekf::stateupdateIMU(Vector6d state, Vector6d K, double z, double h){
   // Find new state
-  MatrixXd stateNew(5,1);
+  Vector6d stateNew;
   stateNew = state + K*(z - h);
   return stateNew;
 }
 
 // 5. Covariance update
-Matrix5d Ekf::covUpdateIMU(Matrix5d cov, Vector5d K, Matrix15 H){
+Matrix6d Ekf::covUpdateIMU(Matrix6d cov, Vector6d K, Matrix16 H){
   // Find new covariance
-  MatrixXd covNew(5,5);
+  Matrix6d covNew;
   covNew = cov - K*H*cov;
   return covNew;
 }
@@ -388,10 +396,10 @@ void Ekf::measurementUpdateIMU(double z){ // z is omega_z
   // Determine h and H
   double h;
   h = hIMU(state_);
-  MatrixXd H(1,5);
+  Matrix16 H;
   H = HIMU(state_);
   // Find Kalman Gain
-  MatrixXd K(5,1);
+  Vector6d K;
   K = KIMU(cov_, H, RIMU_);
   // Find new state
   state_ = stateupdateIMU(state_, K, z, h);
@@ -399,13 +407,13 @@ void Ekf::measurementUpdateIMU(double z){ // z is omega_z
   cov_ = covUpdateIMU(cov_, K, H);
 }
 
-void Ekf::initState(Vector5d state) {
+void Ekf::initState(Vector6d state) {
   state_ = state;
 }
-void Ekf::initCov(Matrix5d cov) {
+void Ekf::initCov(Matrix6d cov) {
   cov_ = cov;
 }
-void Ekf::initSystem(Matrix5d Q) {
+void Ekf::initSystem(Matrix6d Q) {
   Q_ = Q;
 }
 void Ekf::initDecaWave(Matrix4d R, Matrix42 DecaWaveBeaconLoc,
