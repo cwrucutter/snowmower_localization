@@ -40,7 +40,7 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Code up IMU measurement model.
 
-* Add IMU bias as a state.
+* **DONE** Add IMU bias as a state.
 
 * Write tests for IMU h.
 

@@ -36,21 +36,25 @@ using namespace Eigen;
 class Ekf {
 
  public:
-  typedef Matrix<double, 5, 1> Vector5d;
-  typedef Matrix<double, 5, 5> Matrix5d;
-  typedef Matrix<double, 1, 5> Matrix15;
-  typedef Matrix<double, 2, 5> Matrix25;
-  typedef Matrix<double, 5, 2> Matrix52;
-  typedef Matrix<double, 1, 1> Matrix11;
-  typedef Matrix<double, 4, 5> Matrix45;
-  typedef Matrix<double, 5, 4> Matrix54;
-  typedef Matrix<double, 4, 2> Matrix42;
+  typedef Matrix<double, 6, 1> Vector6d; // state_, fSystem, KIMU, stateUpdate
+  typedef Matrix<double, 6, 6> Matrix6d; // cov_, Q_, FSystem, covUpdate
+  typedef Matrix<double, 1, 6> Matrix16; // HIMU
+  typedef Matrix<double, 2, 6> Matrix26; // HEnc
+  typedef Matrix<double, 6, 2> Matrix62; // KEnc
+  typedef Matrix<double, 1, 1> Matrix11; // not in use (zIMU, hIMU, RIMU_)
+  typedef Matrix<double, 4, 6> Matrix46; // HDW
+  typedef Matrix<double, 6, 4> Matrix64; // KDW
+  typedef Matrix<double, 4, 2> Matrix42; // Beacon (x,y) locations
+                            // Vector4d  // zDW, hDW
+                            // Matrix4d  // RDW_
+                            // Vector2d  // zEnc, hEnc
+                            // Matrix2d  // REnc
 
   /*************
     Parameters
   *************/
   // System Model Covariance Matrix
-  Matrix5d Q_;
+  Matrix6d Q_;
  
   // Decawave Beacon Locations (meters) x values in col 1, y values in col 2
   Matrix42 DecaWaveBeaconLoc_;
@@ -72,55 +76,55 @@ class Ekf {
     Member Variables
   *******************/
   // State Vector and Covariance Matrix
-  Vector5d state_;
-  Matrix5d cov_;
+  Vector6d state_;
+  Matrix6d cov_;
 
   /*******************
     Member Functions
   *******************/
-  void initState(Vector5d state);
-  void initCov(Matrix5d cov);
+  void initState(Vector6d state);
+  void initCov(Matrix6d cov);
 
   // System update
-  void initSystem(Matrix5d Q);
-  Vector5d fSystem(Vector5d state, double dt);
-  Matrix5d FSystem(Vector5d state, double dt);
+  void initSystem(Matrix6d Q);
+  Vector6d fSystem(Vector6d state, double dt);
+  Matrix6d FSystem(Vector6d state, double dt);
   void systemUpdate(double dt);
 
   // Absolute measurement updates (e.g. GPS, beacons)
   // DecaWave
   void initDecaWave(Matrix4d R, Matrix42 DecaWaveBeaconLoc,
 		    Vector2d DecaWaveOffset);
-  Vector4d hDecaWave(Vector5d state, Matrix42 DecaWaveBeaconLoc,
+  Vector4d hDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
 		     Vector2d DecaWaveOffset);
-  Matrix45 HDecaWave(Vector5d state, Matrix42 DecaWaveBecaonLoc,
+  Matrix46 HDecaWave(Vector6d state, Matrix42 DecaWaveBecaonLoc,
 		     Vector2d DecaWaveOffset);
-  Matrix54 KDecaWave(Matrix5d cov, Matrix45 H, Matrix4d R);
-  Vector5d stateUpdateDecaWave(Vector5d state, Matrix54 K, Vector4d z,
+  Matrix64 KDecaWave(Matrix6d cov, Matrix46 H, Matrix4d R);
+  Vector6d stateUpdateDecaWave(Vector6d state, Matrix64 K, Vector4d z,
 			       Vector4d h);
-  Matrix5d covUpdateDecaWave(Matrix5d cov, Matrix54 K, Matrix45 H);
+  Matrix6d covUpdateDecaWave(Matrix6d cov, Matrix64 K, Matrix46 H);
   void measurementUpdateDecaWave(Vector4d z); // z is d1-d4
   
   // Relative measurement updates (e.g. encoders, IMU)
   // Wheel Encoders
   void initEnc(Matrix2d R, double b, double tpmRight, double tpmLeft);
-  Vector2d hEnc(Vector5d state, double b, double tpmRight,
+  Vector2d hEnc(Vector6d state, double b, double tpmRight,
 		double tpmLeft);
-  Matrix25 HEnc(Vector5d state, double b, double tpmright,
+  Matrix26 HEnc(Vector6d state, double b, double tpmright,
 		double tpmLeft);
-  Matrix52 KEnc(Matrix5d cov, Matrix25 H, Matrix2d R);
-  Vector5d stateUpdateEnc(Vector5d state, Matrix52 K, Vector2d z,
+  Matrix62 KEnc(Matrix6d cov, Matrix26 H, Matrix2d R);
+  Vector6d stateUpdateEnc(Vector6d state, Matrix62 K, Vector2d z,
 			  Vector2d h);
-  Matrix5d covUpdateEnc(Matrix5d cov, Matrix52 K, Matrix25 H);
+  Matrix6d covUpdateEnc(Matrix6d cov, Matrix62 K, Matrix26 H);
   void measurementUpdateEncoders(Vector2d z); // z is encL and encR
   // IMU
   void initIMU(double R);
-  double hIMU(Vector5d state);
-  Matrix15 HIMU(Vector5d state);
-  Vector5d KIMU(Matrix5d cov, Matrix15 H, double R);
-  Vector5d stateupdateIMU(Vector5d state, Vector5d K, double z,
+  double hIMU(Vector6d state);
+  Matrix16 HIMU(Vector6d state);
+  Vector6d KIMU(Matrix6d cov, Matrix16 H, double R);
+  Vector6d stateupdateIMU(Vector6d state, Vector6d K, double z,
 			  double h);
-  Matrix5d covUpdateIMU(Matrix5d cov, Vector5d K, Matrix15 H);
+  Matrix6d covUpdateIMU(Matrix6d cov, Vector6d K, Matrix16 H);
   void measurementUpdateIMU(double z); // z is omega_z
   
   //public:
