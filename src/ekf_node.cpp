@@ -34,7 +34,8 @@ SOFTWARE.
 
 // DecaWave callback function
 void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
-  ekf_.systemUpdate(dt(msg.header.stamp));
+  double dtSys = dtSystem(msg.header.stamp);
+  ekf_.systemUpdate(dtSys);
   Vector4d z;
   z << msg.dist[1], msg.dist[2], msg.dist[3],msg.dist[4];
   ekf_.measurementUpdateDecaWave(z);
@@ -43,27 +44,40 @@ void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 
 // Wheel Encoder callback function
 void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
-  ekf_.systemUpdate(dt(msg.header.stamp));
+  double dtSys = dtSystem(msg.header.stamp);
+  double dtEnc = dtEncoder(msg.header.stamp);
+  ekf_.systemUpdate(dtSys);
   Vector2d z;
   z << msg.right, msg.left;
-  ekf_.measurementUpdateEncoders(z);
+  ekf_.measurementUpdateEncoders(z, zPre_, dtEnc);
   publishState();
+  // Store current measurement as zPre_
+  zPre_ = z;
 }
 
 // Imu callback function
 void EkfNode::imuSubCB(const sensor_msgs::Imu& msg){
-  ekf_.systemUpdate(dt(msg.header.stamp));
+  double dtSys = dtSystem(msg.header.stamp);
+  ekf_.systemUpdate(dtSys);
   double z = msg.angular_velocity.z;
   ekf_.measurementUpdateIMU(z);
   publishState();
 }
 
-  // Determine time since the last time dt() was called.
-double EkfNode::dt(ros::Time currentTime){
-  ros::Duration dt;
-  dt = currentTime - lastTime_;
-  lastTime_ = currentTime;
-  return dt.toSec();
+// Determine time since the last time dtSystem() was called.
+double EkfNode::dtSystem(ros::Time currentSysTime){
+  ros::Duration dtSys;
+  dtSys = currentSysTime - lastSysTime_;
+  lastSysTime_ = currentSysTime;
+  return dtSys.toSec();
+}
+
+// Determine time since the last time dtEnc() was called.
+double EkfNode::dtEncoder(ros::Time currentEncTime){
+  ros::Duration dtEnc;
+  dtEnc = currentEncTime - lastEncTime_;
+  lastEncTime_ = currentEncTime;
+  return dtEnc.toSec();
 }
 
 
@@ -110,6 +124,13 @@ EkfNode::EkfNode(): private_nh_("~") {
   dwSub_ = public_nh_.subscribe("dw_beacons",1,&EkfNode::dwSubCB,this);
   imuSub_ = public_nh_.subscribe("imu/data",1,&EkfNode::imuSubCB,this);
   encSub_ = public_nh_.subscribe("enc",1,&EkfNode::encSubCB,this);
+
+  // Wait for time to not equal zero. A zero time means that no message has
+  // been received on the /clock topic
+  ros::Time timeZero(0.0);
+  while (ros::Time::now() == timeZero) { }
+  // Sleep for a small time to make sure publishing and subscribing works.
+  ros::Duration(0.1).sleep();
 }
 
 /* Destructor */

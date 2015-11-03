@@ -109,14 +109,16 @@ class Ekf {
   // Wheel Encoders
   void initEnc(Matrix2d R, double b, double tpmRight, double tpmLeft);
   Vector2d hEnc(Vector6d state, double b, double tpmRight,
-		double tpmLeft);
+		double tpmLeft, double ticksPreRight, double ticksPreLeft,
+		double dt);
   Matrix26 HEnc(Vector6d state, double b, double tpmright,
-		double tpmLeft);
+		double tpmLeft, double dt);
   Matrix62 KEnc(Matrix6d cov, Matrix26 H, Matrix2d R);
   Vector6d stateUpdateEnc(Vector6d state, Matrix62 K, Vector2d z,
 			  Vector2d h);
   Matrix6d covUpdateEnc(Matrix6d cov, Matrix62 K, Matrix26 H);
-  void measurementUpdateEncoders(Vector2d z); // z is encL and encR
+  void measurementUpdateEncoders(Vector2d z, Vector2d zPre, double dt);
+  
   // IMU
   void initIMU(double R);
   double hIMU(Vector6d state);

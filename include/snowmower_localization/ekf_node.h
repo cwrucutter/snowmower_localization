@@ -55,11 +55,17 @@ class EkfNode {
   // Publish the state as an odom message on the topic odom_ekf. Also well broadcast a tansform.
   void publishState(); 
 
-  // Store the time of the last update. This is used to determine dt.
-  ros::Time lastTime_;
+  // Store the time of the last System update. This is used to determine dt.
+  ros::Time lastSysTime_;
+  // Store the time of the last Encoder update. This is used to determine speed
+  ros::Time lastEncTime_;
+  // Sore last Encoder tick count. Needed to predict new encoder reading.
+  Vector2d zPre_;
 
-  // Determine time since the last time dt() was called.
-  double dt(ros::Time currentTime);
+  // Determine time since the last time dtSys() was called.
+  double dtSystem(ros::Time currentSysTime);
+  // Determine time since the last time dtEnc() was called.
+  double dtEncoder(ros::Time currentEncTime);
 
   
   // Initialization process

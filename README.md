@@ -61,3 +61,5 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 * **DONE** Write code to determine dt (The plan is to run a system and measurement update each time a measurement is recieved.)
 
 * Learn how to forward declare instead of #include in ekf.h
+
+* **DONE** Should v_r, d_r, or number of ticks be the measurement for encoders? Should that process happen in ekf or ekf_node?

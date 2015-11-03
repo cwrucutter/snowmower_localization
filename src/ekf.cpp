@@ -281,23 +281,27 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
 ***********************/
 
 // 1. h(x)
-Vector2d Ekf::hEnc(Vector6d state, double b, double tpmRight, double tpmLeft){
+Vector2d Ekf::hEnc(Vector6d state, double b, double tpmRight, double tpmLeft,
+		   double ticksPreRight, double ticksPreLeft, double dt){
   Vector2d h;
-  double h1 = state(3)+b_/2*state(4); // v+(b/2)*omega
-  double h2 = state(3)-b_/2*state(4); // v-(b/2)*omega
+  double h1 = (tpmRight/dt)*(state(3)+b/2*state(4))-ticksPreRight;
+  double h2 = (tpmLeft/dt)*(state(3)-b/2*state(4))-ticksPreLeft;
   h << h1, h2;
   return h;
 }
 
 // 2. H(x)
-Matrix26 Ekf::HEnc(Vector6d state, double b, double tpmRight, double tpmLeft){
+Matrix26 Ekf::HEnc(Vector6d state, double b, double tpmRight, double tpmLeft,
+		   double dt){
   // Calculate H
-  double H15 = b_/2;
-  double H25 = -b_/2;
+  double H14 = dt;
+  double H15 = b/2*dt;
+  double H24 = dt;
+  double H25 = -b/2*dt;
 
   Matrix26 H;
-  H << 0, 0, 0, 1, H15, 0,
-       0, 0, 0, 1, H25, 0;
+  H << 0, 0, 0, H14, H15, 0,
+       0, 0, 0, H24, H25, 0;
   return H;
 }
 
@@ -325,14 +329,14 @@ Matrix6d Ekf::covUpdateEnc(Matrix6d cov, Matrix62 K, Matrix26 H){
   return covNew;
 }
 
-
 // 6. Total measurement update
-void Ekf::measurementUpdateEncoders(Vector2d z){ // z is encL and encR
+void Ekf::measurementUpdateEncoders(Vector2d z, Vector2d zPre, double dt){
+  // z is encL and encR
   // Determine h and H
   Vector2d h;
-  h = hEnc(state_, b_, tpmRight_, tpmLeft_);
+  h = hEnc(state_, b_, tpmRight_, tpmLeft_, zPre(0), zPre(1), dt);
   Matrix26 H;
-  H = HEnc(state_, b_, tpmRight_, tpmLeft_);
+  H = HEnc(state_, b_, tpmRight_, tpmLeft_, dt);
   // Find Kalman Gain
   Matrix62 K;
   K = KEnc(cov_, H, REnc_);
