@@ -55,6 +55,9 @@ class EkfNode {
   // Publish the state as an odom message on the topic odom_ekf. Also well broadcast a tansform.
   void publishState(); 
 
+  std::string base_frame_; // Frame of the robot
+  std::string map_frame_;  // Frame of the map
+
   // Store the time of the last System update. This is used to determine dt.
   ros::Time lastSysTime_;
   // Store the time of the last Encoder update. This is used to determine speed

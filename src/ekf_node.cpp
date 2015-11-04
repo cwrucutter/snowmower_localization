@@ -88,8 +88,8 @@ void EkfNode::publishState(){
 
   // Populate timestamp, position frame, and velocity frame
   state_msg.header.stamp = ros::Time::now();
-  state_msg.header.frame_id = "map";
-  state_msg.child_frame_id = "base_link";
+  state_msg.header.frame_id = map_frame_;
+  state_msg.child_frame_id = base_frame_;
 
   // Populate the position and orientation
   state_msg.pose.pose.position.x = ekf_.state_(0); // x
@@ -113,6 +113,69 @@ void EkfNode::publishState(){
   // Now for the transform
   // ...
 } 
+
+  // Initialization process
+void EkfNode::init() {
+  // Use the ROS parameter server to initilize parameters
+  if(!private_nh_.getParam("base_frame", base_frame_))
+    base_frame_ = "base_link";
+  if(!private_nh_.getParam("map_frame", map_frame_))
+    map_frame_ = "map";
+
+  MatrixXd state(6,1);
+  MatrixXd cov(6,6);
+  ekf_.initSystem(state);
+  ekf_.initCov(cov);
+
+  MatrixXd Q(6,6);
+  ekf_.initSystem(Q);
+
+  /* FIX THIS!
+  // Create temp array to initialize R for DecaWave
+  double temp[] = {0.01, 0, 0, 0,
+		   0, 0.01, 0, 0,
+		   0, 0, 0.01, 0,
+		   0, 0, 0, 0.01};
+  // And a std::vector, which will be used to initialize an Eigen Matrix
+  std::vector<double> RDW (temp, temp + sizeof(temp) / sizeof(double));
+  // Check the parameter server and initialize RDW
+  if(!private_nh_.getParam("R_DW", RDW)) {
+  }
+  // Check to see if the size is not equal to 16
+  if (RDW.size() != 16) {
+    ROS_INFO_STREAM("R_DW isn't 16 elements long!");
+  }
+  // And initialize the Matrix
+  MatrixXd RDecaWave(RDW.data());
+  MatrixXd DecaWaveBeaconLoc(4,2);
+  MatrixXd DecaWaveOffset(2,1);
+  double DW_offset_x;
+  double DW_offset_y;
+  if(!private_nh_.getParam("DW_offset_x", DW_offset_x))
+    DW_offset_x = 0.0;
+  if(!private_nh_.getParam("DW_offset_y", DW_offset_y))
+    DW_offset_y = 0.0;
+  DecaWaveOffset << DW_offset_x, DW_offset_y;
+
+  ekf_.initDecaWave(RDecaWave, DecaWaveBeaconLoc, DecaWaveOffset);
+  */
+
+  MatrixXd REnc(2,2);
+  double b, tpmRight, tpmLeft;
+  if(!private_nh_.getParam("track_width", b))
+    b = 1;
+  if(!private_nh_.getParam("tpm_right", tpmRight))
+    tpmRight = 1;
+  if(!private_nh_.getParam("tpm_left", tpmLeft))
+    tpmLeft = 1;
+  ekf_.initEnc(REnc, b, tpmRight, tpmLeft);
+
+  double RIMU;
+  if(!private_nh_.getParam("R_IMU", RIMU))
+    RIMU = 1;
+  ekf_.initIMU(RIMU);
+}
+
 
 /* Constructor */
 EkfNode::EkfNode(): private_nh_("~") {
