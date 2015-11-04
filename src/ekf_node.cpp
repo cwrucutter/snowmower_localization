@@ -47,7 +47,7 @@ void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
   double dtEnc = dtEncoder(msg.header.stamp);
   ekf_.systemUpdate(dtSys);
-  Vector2d z;
+  Vector2i z;
   z << msg.right, msg.left;
   ekf_.measurementUpdateEncoders(z, zPre_, dtEnc);
   publishState();

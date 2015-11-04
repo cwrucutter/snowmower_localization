@@ -282,7 +282,7 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
 
 // 1. h(x)
 Vector2d Ekf::hEnc(Vector6d state, double b, double tpmRight, double tpmLeft,
-		   double ticksPreRight, double ticksPreLeft, double dt){
+		   int ticksPreRight, int ticksPreLeft, double dt){
   Vector2d h;
   double h1 = (tpmRight/dt)*(state(3)+b/2*state(4))-ticksPreRight;
   double h2 = (tpmLeft/dt)*(state(3)-b/2*state(4))-ticksPreLeft;
@@ -314,10 +314,10 @@ Matrix62 Ekf::KEnc(Matrix6d cov, Matrix26 H, Matrix2d R){
 }
 
 // 4. State update
-Vector6d Ekf::stateUpdateEnc(Vector6d state, Matrix62 K, Vector2d z, Vector2d h){
+Vector6d Ekf::stateUpdateEnc(Vector6d state, Matrix62 K, Vector2i z, Vector2d h){
   // Find new state
   Vector6d stateNew;
-  stateNew = state + K*(z - h);
+  stateNew = state + K*(z.cast<double>() - h);
   return stateNew;
 }
 
@@ -330,7 +330,7 @@ Matrix6d Ekf::covUpdateEnc(Matrix6d cov, Matrix62 K, Matrix26 H){
 }
 
 // 6. Total measurement update
-void Ekf::measurementUpdateEncoders(Vector2d z, Vector2d zPre, double dt){
+void Ekf::measurementUpdateEncoders(Vector2i z, Vector2i zPre, double dt){
   // z is encL and encR
   // Determine h and H
   Vector2d h;

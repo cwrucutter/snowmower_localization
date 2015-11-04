@@ -60,7 +60,7 @@ class EkfNode {
   // Store the time of the last Encoder update. This is used to determine speed
   ros::Time lastEncTime_;
   // Sore last Encoder tick count. Needed to predict new encoder reading.
-  Vector2d zPre_;
+  Vector2i zPre_;
 
   // Determine time since the last time dtSys() was called.
   double dtSystem(ros::Time currentSysTime);
