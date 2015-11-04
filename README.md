@@ -20,6 +20,8 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * Populate odometry message with Covariances.
 
+* Initialize everything!
+
 * **DONE** Create callback functions for subscribers.
 
 * Make decawave callback function open to any number of beacons.
@@ -48,7 +50,7 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Code up Encoder measurement model.
 
-* Write tests for Encoder h.
+* **DONE** Write tests for Encoder h.
 
 * Write tests for Encoder H.
 

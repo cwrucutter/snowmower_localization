@@ -184,6 +184,250 @@ TEST(hDecaWaveTest, 3_4_5_Grid) {
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 }
 
+TEST(hEncTest, straightLine) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  double b;
+  double tpmRight, tpmLeft;
+  int ticksPreRight, ticksPreLeft;
+  double dt;
+  Eigen::MatrixXd h(2,1);
+
+  // Stand still at 0 ticks each.
+  state << 0.0, 0.0, 0.0, // x, y, theta
+           0.0, 0.0, 0.0; // v, omega, bias
+  b = 1.0;
+  tpmRight = 10.0;
+  tpmLeft = 10.0;
+  ticksPreRight = 0;
+  ticksPreLeft = 0;
+  dt = 1.0;
+  h << 0.0, 0.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+  // Move forward 10 ticks from -10, 10.
+  state << 0.0, 0.0, 0.0, // x, y, theta
+           1.0, 0.0, 0.0; // v, omega, bias
+  b = 1.0;
+  tpmRight = 10.0;
+  tpmLeft = 10.0;
+  ticksPreRight = -10.0;
+  ticksPreLeft = 10.0;
+  dt = 1.0;
+  h << 0.0, 20.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+  // Move forward 10 ticks from -10, 10.
+  state << 0.0, 0.0, 0.0, // x, y, theta
+           1.0, 0.0, 0.0; // v, omega, bias
+  b = 1.0;
+  tpmRight = 10.0;
+  tpmLeft = 10.0;
+  ticksPreRight = 1.0;
+  ticksPreLeft = 0.0;
+  dt = 1.0;
+  h << 11.0, 10.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+}
+
+TEST(hEncTest, spinInPlace) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  double b;
+  double tpmRight, tpmLeft;
+  int ticksPreRight, ticksPreLeft;
+  double dt;
+  Eigen::MatrixXd h(2,1);
+  double omega, v, vRight, vLeft, r;
+
+  // Spin in place for a second.
+  omega = 1;
+  v = 0;
+  b = 1.0;
+  if (omega != 0) {
+    r = v/omega;
+    vRight = (r + b/2) * omega;
+    vLeft =  (r - b/2) * omega;
+  }
+  else {
+    vRight = v;
+    vLeft = v;
+  }
+  dt = 1.0;
+
+  state << 0.0, 0.0, 0.0, // x, y, theta
+           v, omega, 0.0; // v, omega, bias
+  tpmRight = 10.0;
+  tpmLeft = 10.0;
+  ticksPreRight = 0.0;
+  ticksPreLeft = 0.0;
+
+  h << ticksPreRight + vRight*dt*tpmRight,
+    ticksPreLeft + vLeft*dt*tpmLeft;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+  // Spin the other way for a second.
+  omega = 3;
+  v = 0;
+  b = 0.6;
+  if (omega != 0) {
+    r = v/omega;
+    vRight = (r + b/2) * omega;
+    vLeft =  (r - b/2) * omega;
+  }
+  else {
+    vRight = v;
+    vLeft = v;
+  }
+  dt = 1.0;
+
+  state << 1.0, 0.2, M_PI, // x, y, theta
+           v, omega, 0.3; // v, omega, bias
+  tpmRight = 25000.0;
+  tpmLeft =  24000.0;
+  ticksPreRight = 290234;
+  ticksPreLeft = -289082;
+
+  h << ticksPreRight + vRight*dt*tpmRight,
+    ticksPreLeft + vLeft*dt*tpmLeft;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+}
+
+TEST(hEncTest, moveAndSpin) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  double b;
+  double tpmRight, tpmLeft;
+  int ticksPreRight, ticksPreLeft;
+  double dt;
+  Eigen::MatrixXd h(2,1);
+  double omega, v, vRight, vLeft, r;
+
+  // Forward and CCW turn.
+  omega = 1;
+  v = 1;
+  b = 1.0;
+  if (omega != 0) {
+    r = v/omega;
+    vRight = (r + b/2) * omega;
+    vLeft =  (r - b/2) * omega;
+  }
+  else {
+    vRight = v;
+    vLeft = v;
+  }
+  dt = 1.0;
+
+  state << 0.0, 0.0, 0.0, // x, y, theta
+           v, omega, 0.0; // v, omega, bias
+  tpmRight = 10.0;
+  tpmLeft = 10.0;
+  ticksPreRight = 0.0;
+  ticksPreLeft = 0.0;
+
+  h << ticksPreRight + vRight*dt*tpmRight,
+    ticksPreLeft + vLeft*dt*tpmLeft;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+  // Forward and CW TURN.
+  omega = -3;
+  v = 4;
+  b = 0.6;
+  if (omega != 0) {
+    r = v/omega;
+    vRight = (r + b/2) * omega;
+    vLeft =  (r - b/2) * omega;
+  }
+  else {
+    vRight = v;
+    vLeft = v;
+  }
+  dt = 1.0;
+
+  state << 1.0, 0.2, M_PI, // x, y, theta
+           v, omega, 0.3; // v, omega, bias
+  tpmRight = 25000.0;
+  tpmLeft =  24000.0;
+  ticksPreRight = 290234;
+  ticksPreLeft = -289082;
+
+  h << ticksPreRight + vRight*dt*tpmRight,
+    ticksPreLeft + vLeft*dt*tpmLeft;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+  // Reverse and CCW turn.
+  omega = 1;
+  v = -1;
+  b = 1.0;
+  if (omega != 0) {
+    r = v/omega;
+    vRight = (r + b/2) * omega;
+    vLeft =  (r - b/2) * omega;
+  }
+  else {
+    vRight = v;
+    vLeft = v;
+  }
+  dt = 1.0;
+
+  state << 0.0, 0.0, 0.0, // x, y, theta
+           v, omega, 0.0; // v, omega, bias
+  tpmRight = 10.0;
+  tpmLeft = 10.0;
+  ticksPreRight = 0.0;
+  ticksPreLeft = 0.0;
+
+  h << ticksPreRight + vRight*dt*tpmRight,
+    ticksPreLeft + vLeft*dt*tpmLeft;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+  // Reverse and CW TURN.
+  omega = -3;
+  v = -4;
+  b = 0.6;
+  if (omega != 0) {
+    r = v/omega;
+    vRight = (r + b/2) * omega;
+    vLeft =  (r - b/2) * omega;
+  }
+  else {
+    vRight = v;
+    vLeft = v;
+  }
+  dt = 1.0;
+
+  state << 1.0, 0.2, M_PI, // x, y, theta
+           v, omega, 0.3; // v, omega, bias
+  tpmRight = 25000.0;
+  tpmLeft =  24000.0;
+  ticksPreRight = 290234;
+  ticksPreLeft = -289082;
+
+  h << ticksPreRight + vRight*dt*tpmRight,
+    ticksPreLeft + vLeft*dt*tpmLeft;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hEnc(state, b, tpmRight, tpmLeft,
+						   ticksPreRight, ticksPreLeft,
+						   dt)));
+
+}
 
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -284,8 +284,8 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
 Vector2d Ekf::hEnc(Vector6d state, double b, double tpmRight, double tpmLeft,
 		   int ticksPreRight, int ticksPreLeft, double dt){
   Vector2d h;
-  double h1 = (tpmRight/dt)*(state(3)+b/2*state(4))-ticksPreRight;
-  double h2 = (tpmLeft/dt)*(state(3)-b/2*state(4))-ticksPreLeft;
+  double h1 = (tpmRight * dt) * (state(3) + b/2*state(4)) + ticksPreRight;
+  double h2 = (tpmLeft * dt) * (state(3) - b/2*state(4)) + ticksPreLeft;
   h << h1, h2;
   return h;
 }
