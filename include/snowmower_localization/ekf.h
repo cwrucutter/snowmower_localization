@@ -36,15 +36,24 @@ using namespace Eigen;
 class Ekf {
 
  public:
-  typedef Matrix<double, 6, 1> Vector6d; // state_, fSystem, KIMU, stateUpdate
-  typedef Matrix<double, 6, 6> Matrix6d; // cov_, Q_, FSystem, covUpdate
-  typedef Matrix<double, 1, 6> Matrix16; // HIMU
-  typedef Matrix<double, 2, 6> Matrix26; // HEnc
-  typedef Matrix<double, 6, 2> Matrix62; // KEnc
-  typedef Matrix<double, 1, 1> Matrix11; // not in use (zIMU, hIMU, RIMU_)
-  typedef Matrix<double, 4, 6> Matrix46; // HDW
-  typedef Matrix<double, 6, 4> Matrix64; // KDW
-  typedef Matrix<double, 4, 2> Matrix42; // Beacon (x,y) locations
+  // (6x1) state_, fSystem, KIMU, stateUpdate
+  typedef Matrix<double, 6, 1> Vector6d;
+  // (6x6) cov_, Q_, FSystem, covUpdate 
+  typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+  // (1x6) HIMU
+  typedef Matrix<double, 1, 6> Matrix16;
+  // (2x6) HEnc
+  typedef Matrix<double, 2, 6, RowMajor> Matrix26;
+  // (6x2) KEnc
+  typedef Matrix<double, 6, 2, RowMajor> Matrix62;
+  // (1x1) not in use (zIMU, hIMU, RIMU_)
+  typedef Matrix<double, 1, 1> Matrix11;
+  // (4x6) HDW
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  // (6x4) KDW
+  typedef Matrix<double, 6, 4, RowMajor> Matrix64;
+  // (4x2) Beacon (x,y) locations
+  typedef Matrix<double, 4, 2, RowMajor> Matrix42;
                             // Vector4d  // zDW, hDW
                             // Matrix4d  // RDW_
                             // Vector2d  // zEnc, hEnc

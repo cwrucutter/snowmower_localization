@@ -1,6 +1,6 @@
 /******************************************************************************
 ekf_node.cpp
-The EkfNode class interfaces an Ekf clas with ROS communication functions.
+The EkfNode class interfaces an Ekf class with ROS communication functions.
 *******************************************************************************
 The MIT License (MIT)
 
@@ -122,31 +122,114 @@ void EkfNode::init() {
   if(!private_nh_.getParam("map_frame", map_frame_))
     map_frame_ = "map";
 
-  MatrixXd state(6,1);
-  MatrixXd cov(6,6);
-  ekf_.initSystem(state);
-  ekf_.initCov(cov);
-
-  MatrixXd Q(6,6);
-  ekf_.initSystem(Q);
-
-  /* FIX THIS!
-  // Create temp array to initialize R for DecaWave
-  double temp[] = {0.01, 0, 0, 0,
-		   0, 0.01, 0, 0,
-		   0, 0, 0.01, 0,
-		   0, 0, 0, 0.01};
+  // Create temp array to initialize state
+  double state_temp[] = {0, 0, 0, 0, 0, 0};
   // And a std::vector, which will be used to initialize an Eigen Matrix
-  std::vector<double> RDW (temp, temp + sizeof(temp) / sizeof(double));
+  std::vector<double> state (state_temp, state_temp + sizeof(state_temp) / sizeof(double));
+  // Check the parameter server and initialize state
+  if(!private_nh_.getParam("state", state)) {
+    ROS_INFO_STREAM("No state found. Using default.");
+  }
+  // Check to see if the size is not equal to 6
+  if (state.size() != 6) {
+    ROS_INFO_STREAM("state isn't 6 elements long!");
+  }
+  // And initialize the Matrix
+  typedef Matrix<double, 6, 1> Vector6d;
+  Vector6d stateMat(state.data());
+  std::cout << "state = " << std::endl;
+  std::cout << stateMat << std::endl;
+  ekf_.initState(stateMat);
+
+  // Create temp array to initialize covariance
+  double cov_temp[] = {0.01, 0, 0, 0, 0, 0,
+		       0, 0.01, 0, 0, 0, 0,
+		       0, 0, 0.01, 0, 0, 0,
+		       0, 0, 0, 0.01, 0, 0,
+		       0, 0, 0, 0, 0.01, 0,
+		       0, 0, 0, 0, 0, 0.01};
+  // And a std::vector, which will be used to initialize an Eigen Matrix
+  std::vector<double> cov (cov_temp, cov_temp + sizeof(cov_temp) / sizeof(double));
+  // Check the parameter server and initialize cov
+  if(!private_nh_.getParam("covariance", cov)) {
+    ROS_INFO_STREAM("No covariance found. Using default.");
+  }
+  // Check to see if the size is not equal to 36
+  if (cov.size() != 36) {
+    ROS_INFO_STREAM("cov isn't 36 elements long!");
+  }
+  // And initialize the Matrix
+  typedef Matrix<double, 6, 6, RowMajor> Matrix66;
+  Matrix66 covMat(cov.data());
+  std::cout << "covariance = " << std::endl;
+  std::cout << covMat << std::endl;
+  ekf_.initCov(covMat);
+
+  // Create temp array to initialize Q
+  double Q_temp[] = {0.01, 0, 0, 0, 0, 0,
+		     0, 0.01, 0, 0, 0, 0,
+		     0, 0, 0.01, 0, 0, 0,
+		     0, 0, 0, 0.01, 0, 0,
+		     0, 0, 0, 0, 0.01, 0,
+		     0, 0, 0, 0, 0, 0.01};
+  // And a std::vector, which will be used to initialize an Eigen Matrix
+  std::vector<double> Q (Q_temp, Q_temp + sizeof(Q_temp) / sizeof(double));
+  // Check the parameter server and initialize Q
+  if(!private_nh_.getParam("Q", Q)) {
+    ROS_INFO_STREAM("No Q found. Using default.");
+  }
+  // Check to see if the size is not equal to 36
+  if (Q.size() != 36) {
+    ROS_INFO_STREAM("Q isn't 36 elements long!");
+  }
+  // And initialize the Matrix
+  Matrix66 QMat(Q.data());
+  std::cout << "Q = " << std::endl;
+  std::cout << QMat << std::endl;
+  ekf_.initSystem(QMat);
+
+  // Create temp array to initialize R for DecaWave
+  double RDW_temp[] = {0.01, 0, 0, 0,
+		       0, 0.01, 0, 0,
+		       0, 0, 0.01, 0,
+		       0, 0, 0, 0.01};
+  // And a std::vector, which will be used to initialize an Eigen Matrix
+  std::vector<double> RDW (RDW_temp, RDW_temp + sizeof(RDW_temp) / sizeof(double));
   // Check the parameter server and initialize RDW
-  if(!private_nh_.getParam("R_DW", RDW)) {
+  if(!private_nh_.getParam("DW_R", RDW)) {
+    ROS_INFO_STREAM("No DW_R found. Using default.");
   }
   // Check to see if the size is not equal to 16
   if (RDW.size() != 16) {
-    ROS_INFO_STREAM("R_DW isn't 16 elements long!");
+    ROS_INFO_STREAM("DW_R isn't 16 elements long!");
   }
   // And initialize the Matrix
-  MatrixXd RDecaWave(RDW.data());
+  typedef Matrix<double, 4, 4, RowMajor> Matrix44;
+  Matrix44 RDWMat(RDW.data());
+  std::cout << "RDecaWave = " << std::endl;
+  std::cout << RDWMat << std::endl;
+
+  // Create temp array to initialize beacon locations for DecaWave
+  double DWBL_temp[] = {0, 0,
+		       5, 0,
+		       5, 15,
+		       0, 15};
+  // And a std::vector, which will be used to initialize an Eigen Matrix
+  std::vector<double> DWBL (DWBL_temp, DWBL_temp + sizeof(DWBL_temp) / sizeof(double));
+  // Check the parameter server and initialize DWBL
+  if(!private_nh_.getParam("DW_Beacon_Loc", DWBL)) {
+    ROS_INFO_STREAM("No DW_Beacon_Loc found. Using default.");
+  }
+  // Check to see if the size is not equal to 8
+  if (DWBL.size() != 8) {
+    ROS_INFO_STREAM("DW_Beacon_Loc isn't 8 elements long!");
+  }
+  // And initialize the Matrix
+  typedef Matrix<double, 4, 2, RowMajor> Matrix42;
+  Matrix42 DWBLMat(DWBL.data());
+  std::cout << "DW_Beacon_Loc = " << std::endl;
+  std::cout << DWBLMat << std::endl;
+
   MatrixXd DecaWaveBeaconLoc(4,2);
   MatrixXd DecaWaveOffset(2,1);
   double DW_offset_x;
@@ -156,11 +239,30 @@ void EkfNode::init() {
   if(!private_nh_.getParam("DW_offset_y", DW_offset_y))
     DW_offset_y = 0.0;
   DecaWaveOffset << DW_offset_x, DW_offset_y;
+  std::cout << "DecaWaveOffset = " << std::endl;
+  std::cout << DecaWaveOffset << std::endl;
 
-  ekf_.initDecaWave(RDecaWave, DecaWaveBeaconLoc, DecaWaveOffset);
-  */
+  ekf_.initDecaWave(RDWMat, DWBLMat, DecaWaveOffset);
 
-  MatrixXd REnc(2,2);
+  // Create temp array to initialize R for DecaWave
+  double REnc_temp[] = {0.01, 0,
+			0, 0.01};
+  // And a std::vector, which will be used to initialize an Eigen Matrix
+  std::vector<double> REnc (REnc_temp, REnc_temp + sizeof(REnc_temp) / sizeof(double));
+  // Check the parameter server and initialize RDW
+  if(!private_nh_.getParam("Enc_R", REnc)) {
+    ROS_INFO_STREAM("No Enc_R found. Using default.");
+  }
+  // Check to see if the size is not equal to 4
+  if (REnc.size() != 4) {
+    ROS_INFO_STREAM("Enc_R isn't 4 elements long!");
+  }
+  // And initialize the Matrix
+  typedef Matrix<double, 2, 2, RowMajor> Matrix22;
+  Matrix22 REncMat(REnc.data());
+  std::cout << "R_Enc = " << std::endl;
+  std::cout << REncMat << std::endl;
+
   double b, tpmRight, tpmLeft;
   if(!private_nh_.getParam("track_width", b))
     b = 1;
@@ -168,12 +270,18 @@ void EkfNode::init() {
     tpmRight = 1;
   if(!private_nh_.getParam("tpm_left", tpmLeft))
     tpmLeft = 1;
-  ekf_.initEnc(REnc, b, tpmRight, tpmLeft);
+  ekf_.initEnc(REncMat, b, tpmRight, tpmLeft);
+  std::cout << "track_width = " << b << std::endl;
+  std::cout << "tpm_right   = " << tpmRight << std::endl;
+  std::cout << "tpm_left    = " << tpmLeft << std::endl;
 
   double RIMU;
   if(!private_nh_.getParam("R_IMU", RIMU))
-    RIMU = 1;
+    RIMU = 0.01;
   ekf_.initIMU(RIMU);
+  std::cout << "R_IMU = " << RIMU << std::endl;
+
+  ROS_INFO_STREAM("Finished with initialization.");
 }
 
 
@@ -194,6 +302,8 @@ EkfNode::EkfNode(): private_nh_("~") {
   while (ros::Time::now() == timeZero) { }
   // Sleep for a small time to make sure publishing and subscribing works.
   ros::Duration(0.1).sleep();
+  // Initialize 
+  init();
 }
 
 /* Destructor */
