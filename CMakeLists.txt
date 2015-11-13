@@ -114,6 +114,7 @@ include_directories(${eigen_checks_INCLUDE_DIRS})
 # add_executable(snowmower_localization_node src/snowmower_localization_node.cpp)
 add_executable(ekf_node src/ekf_node.cpp src/ekf.cpp)
 add_executable(test_ekf test/test_ekf.cpp src/ekf.cpp)
+add_executable(test_encoder test/test_encoder.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -125,6 +126,7 @@ add_executable(test_ekf test/test_ekf.cpp src/ekf.cpp)
 # )
 target_link_libraries(ekf_node ${catkin_LIBRARIES})
 target_link_libraries(test_ekf ${catkin_LIBRARIES} eigen_checks gtest)
+target_link_libraries(test_encoder ${catkin_LIBRARIES})
 
 #############
 ## Install ##
