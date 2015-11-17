@@ -25,7 +25,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 
-#include <limits.h>
+#include <climits>
+#include <cfloat>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <eigen-checks/gtest.h>
@@ -428,6 +429,63 @@ TEST(hEncTest, moveAndSpin) {
 						   dt)));
 
 }
+
+TEST(FSystemTest, zeroOmega) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  double x, y, theta, v, omega, bias;
+  double dt;
+  typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+  Matrix6d F;
+
+  x = 0;
+  y = 0;
+  v = 2;
+  theta = M_PI/3;
+  omega = 0;
+  dt = 0.01;
+
+  state << x, y, theta, v, omega, bias;
+  F <<
+    1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1;
+
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(F,ekf.FSystem(state, dt), 0.0001));
+}
+
+TEST(FSystemTest, smallOmega) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  double x, y, theta, v, omega, bias;
+  double dt;
+  typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+  Matrix6d F;
+
+  x = 0;
+  y = 0;
+  v = 2;
+  theta = M_PI/3;
+  omega = DBL_EPSILON;
+  dt = 0.01;
+
+  state << x, y, theta, v, omega, bias;
+  F <<
+    1, 0, 0, 0, 0, 0,
+    0, 1, 0, 0, 0, 0,
+    0, 0, 1, 0, 0, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0, 1;
+
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(F,ekf.FSystem(state, dt), 0.0001));
+}
+
 
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
