@@ -108,17 +108,54 @@ Matrix6d Ekf::FSystem(Vector6d state, double dt){
   double v = state(3);
   double omega = state(4);
 
+  // First determine the correction factor. This is described in Wang 1988. The limit of cf as omega approaches 0 is 1. The following if statement protects against dividing by zero.
+  double cf;
+  if (omega == 0){
+    cf = dt/2.0;
+  }
+  else{
+    cf = sin(omega*dt/2)/omega;
+  }
+
+
   // Calculate F (using the updated state variables)
-  double F13 =  -2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
-  double F14 =   2 * sin(omega*dt/2)*cos(omega*dt/2+theta)/omega;
-  double F23 =   2*v*sin(omega*dt/2)*cos(omega*dt/2+theta)/omega;
-  double F24 =   2 * sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
-  double F15 =  v*dt*cos(omega*dt/2)*cos(omega*dt/2+theta)/omega - 
-                 2*v*sin(omega*dt/2)*cos(omega*dt/2+theta)/pow(omega,2) -
-	        v*dt*sin(omega*dt/2)*sin(omega*dt/2+theta)/omega;
-  double F25 =  v*dt*sin(omega*dt/2)*cos(omega*dt/2+theta)/omega - 
-                 2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/pow(omega,2) -
-	        v*dt*cos(omega*dt/2)*sin(omega*dt/2+theta)/omega;
+  double F13 =  -2*v*cf*sin(omega*dt/2+theta);
+  double F14 =   2 * cf*cos(omega*dt/2+theta);
+  double F23 =   2*v*cf*cos(omega*dt/2+theta);
+  double F24 =   2 * cf*sin(omega*dt/2+theta);
+
+  double F151 =    v*dt*cos(omega*dt/2)*cos(omega*dt/2+theta)/omega;
+  double F152 =   -v*dt*cf*sin(omega*dt/2+theta); 
+  double F153 =    -2*v*sin(omega*dt/2)*cos(omega*dt/2+theta)/pow(omega,2);
+
+  // If omega = 0, F151 and F153 are infinite but opposite of each other.
+  double F15;
+  if (omega == 0) {
+    F15 = F152;
+  }
+  else {
+    // F151 and F153 are huge numbers that cancel out. Add them first.
+    F15 = F151 + F153;
+    // Then add F152, a relatively small number.
+    F15 = F15 + F152;
+  }
+
+  double F251 =    v*dt*cos(omega*dt/2)*sin(omega*dt/2+theta)/omega;
+  double F252 =    v*dt*cf*cos(omega*dt/2+theta);
+  double F253 =    -2*v*sin(omega*dt/2)*sin(omega*dt/2+theta)/pow(omega,2);
+
+  // If omega = 0, F251 and F253 are infinite but opposite of each other.
+  double F25;
+  if (omega == 0) {
+    F25 = F252;
+  }
+  else {
+    // F251 and F253 are huge numbers that cancel out. Add them first.
+    F25 = F251 + F253;
+    // Then add F252, a relatively small number.
+    F25 = F25 + F252;
+  }
+
   // And construct the final matrix
   Matrix6d F;
   F << 1,   0, F13, F14, F15,   0,

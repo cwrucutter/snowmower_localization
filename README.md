@@ -28,6 +28,8 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Code up the equations for the system model.
 
+* Account for omega in denominator in F function.
+
 * **DONE** Write tests for system f.
 
 * Write tests for system F
