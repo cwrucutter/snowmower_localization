@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
   ros::Rate loop_rate(30);
   while (ros::ok())
   {
-    yawRate = 2;
+    yawRate = 0;
     imuMsg.header.stamp = ros::Time::now();
     imuMsg.angular_velocity.z = yawRate;
     imuPub.publish(imuMsg);

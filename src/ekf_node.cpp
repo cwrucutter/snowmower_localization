@@ -110,8 +110,8 @@ void EkfNode::publishState(){
   // Publish the message!
   statePub_.publish(state_msg);
   // Print for debugging purposes
-  ROS_INFO_STREAM(ekf_.state_);
-  ROS_INFO_STREAM(ekf_.cov_);
+  ROS_INFO_STREAM("\nstate = \n" << ekf_.state_);
+  ROS_INFO_STREAM("\ncovariance = \n" << ekf_.cov_);
   // Now for the transform
   // ...
 } 
@@ -130,11 +130,11 @@ void EkfNode::init() {
   std::vector<double> state (state_temp, state_temp + sizeof(state_temp) / sizeof(double));
   // Check the parameter server and initialize state
   if(!private_nh_.getParam("state", state)) {
-    ROS_INFO_STREAM("No state found. Using default.");
+    ROS_WARN_STREAM("No state found. Using default.");
   }
   // Check to see if the size is not equal to 6
   if (state.size() != 6) {
-    ROS_INFO_STREAM("state isn't 6 elements long!");
+    ROS_WARN_STREAM("state isn't 6 elements long!");
   }
   // And initialize the Matrix
   typedef Matrix<double, 6, 1> Vector6d;
@@ -154,11 +154,11 @@ void EkfNode::init() {
   std::vector<double> cov (cov_temp, cov_temp + sizeof(cov_temp) / sizeof(double));
   // Check the parameter server and initialize cov
   if(!private_nh_.getParam("covariance", cov)) {
-    ROS_INFO_STREAM("No covariance found. Using default.");
+    ROS_WARN_STREAM("No covariance found. Using default.");
   }
   // Check to see if the size is not equal to 36
   if (cov.size() != 36) {
-    ROS_INFO_STREAM("cov isn't 36 elements long!");
+    ROS_WARN_STREAM("cov isn't 36 elements long!");
   }
   // And initialize the Matrix
   typedef Matrix<double, 6, 6, RowMajor> Matrix66;
@@ -178,11 +178,11 @@ void EkfNode::init() {
   std::vector<double> Q (Q_temp, Q_temp + sizeof(Q_temp) / sizeof(double));
   // Check the parameter server and initialize Q
   if(!private_nh_.getParam("Q", Q)) {
-    ROS_INFO_STREAM("No Q found. Using default.");
+    ROS_WARN_STREAM("No Q found. Using default.");
   }
   // Check to see if the size is not equal to 36
   if (Q.size() != 36) {
-    ROS_INFO_STREAM("Q isn't 36 elements long!");
+    ROS_WARN_STREAM("Q isn't 36 elements long!");
   }
   // And initialize the Matrix
   Matrix66 QMat(Q.data());
@@ -199,11 +199,11 @@ void EkfNode::init() {
   std::vector<double> RDW (RDW_temp, RDW_temp + sizeof(RDW_temp) / sizeof(double));
   // Check the parameter server and initialize RDW
   if(!private_nh_.getParam("DW_R", RDW)) {
-    ROS_INFO_STREAM("No DW_R found. Using default.");
+    ROS_WARN_STREAM("No DW_R found. Using default.");
   }
   // Check to see if the size is not equal to 16
   if (RDW.size() != 16) {
-    ROS_INFO_STREAM("DW_R isn't 16 elements long!");
+    ROS_WARN_STREAM("DW_R isn't 16 elements long!");
   }
   // And initialize the Matrix
   typedef Matrix<double, 4, 4, RowMajor> Matrix44;
@@ -220,11 +220,11 @@ void EkfNode::init() {
   std::vector<double> DWBL (DWBL_temp, DWBL_temp + sizeof(DWBL_temp) / sizeof(double));
   // Check the parameter server and initialize DWBL
   if(!private_nh_.getParam("DW_Beacon_Loc", DWBL)) {
-    ROS_INFO_STREAM("No DW_Beacon_Loc found. Using default.");
+    ROS_WARN_STREAM("No DW_Beacon_Loc found. Using default.");
   }
   // Check to see if the size is not equal to 8
   if (DWBL.size() != 8) {
-    ROS_INFO_STREAM("DW_Beacon_Loc isn't 8 elements long!");
+    ROS_WARN_STREAM("DW_Beacon_Loc isn't 8 elements long!");
   }
   // And initialize the Matrix
   typedef Matrix<double, 4, 2, RowMajor> Matrix42;
@@ -253,11 +253,11 @@ void EkfNode::init() {
   std::vector<double> REnc (REnc_temp, REnc_temp + sizeof(REnc_temp) / sizeof(double));
   // Check the parameter server and initialize RDW
   if(!private_nh_.getParam("Enc_R", REnc)) {
-    ROS_INFO_STREAM("No Enc_R found. Using default.");
+    ROS_WARN_STREAM("No Enc_R found. Using default.");
   }
   // Check to see if the size is not equal to 4
   if (REnc.size() != 4) {
-    ROS_INFO_STREAM("Enc_R isn't 4 elements long!");
+    ROS_WARN_STREAM("Enc_R isn't 4 elements long!");
   }
   // And initialize the Matrix
   typedef Matrix<double, 2, 2, RowMajor> Matrix22;
