@@ -46,6 +46,8 @@ void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
   double dtEnc = dtEncoder(msg.header.stamp);
+  ROS_INFO_STREAM("dtSys = " << dtSys);
+  ROS_INFO_STREAM("dtEnc = " << dtEnc);
   ekf_.systemUpdate(dtSys);
   Vector2i z;
   z << msg.right, msg.left;
@@ -118,6 +120,10 @@ void EkfNode::publishState(){
 
   // Initialization process
 void EkfNode::init() {
+  // Set Times
+  ros::Time currTime = ros::Time::now();
+  lastEncTime_ = currTime;
+  lastSysTime_ = currTime;
   // Use the ROS parameter server to initilize parameters
   if(!private_nh_.getParam("base_frame", base_frame_))
     base_frame_ = "base_link";
