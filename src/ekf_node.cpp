@@ -109,7 +109,9 @@ void EkfNode::publishState(){
 
   // Publish the message!
   statePub_.publish(state_msg);
-
+  // Print for debugging purposes
+  ROS_INFO_STREAM(ekf_.state_);
+  ROS_INFO_STREAM(ekf_.cov_);
   // Now for the transform
   // ...
 } 

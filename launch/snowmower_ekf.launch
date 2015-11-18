@@ -8,7 +8,7 @@
 
     <!-- State and Covariance Initialization -->
     <rosparam param="state">[2.0, 2.0 , 1.57079632679, 0.0 ,0.0 ,0.0]</rosparam>
-    <rosparam param="covariance">[100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100]</rosparam>
+    <rosparam param="covariance">[100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 0]</rosparam>
 
     <!-- System Initialization -->
     <rosparam param="Q">[0.02, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01]</rosparam>
@@ -29,7 +29,7 @@
     <param name="tpm_left" value="25000.0" type="double"/>
 
     <!-- IMU Initialization -->
-    <param name="R_IMU" value="0.01" type="double"/>
+    <param name="R_IMU" value="0.000009789186194223082" type="double"/>
   </node>
 
 </launch>

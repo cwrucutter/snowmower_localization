@@ -447,13 +447,12 @@ TEST(FSystemTest, zeroOmega) {
 
   state << x, y, theta, v, omega, bias;
   F <<
-    1, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0,
+    1, 0, -0.017320508075689, 0.005, -.00008660254037844386, 0,
+    0, 1, 0.01, 0.008660254037844, 0.00005000000000000002, 0,
+    0, 0, 1, 0, dt, 0,
     0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1;
-
+    0, 0, 0, 0, 0 ,1;
 
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(F,ekf.FSystem(state, dt), 0.0001));
 }
@@ -475,17 +474,42 @@ TEST(FSystemTest, smallOmega) {
 
   state << x, y, theta, v, omega, bias;
   F <<
-    1, 0, 0, 0, 0, 0,
-    0, 1, 0, 0, 0, 0,
-    0, 0, 1, 0, 0, 0,
+    1, 0, -0.017320508075689, 0.005, -0.00008660254037844386, 0,
+    0, 1, 0.01, 0.008660254037844, 0.00005000000000000002, 0,
+    0, 0, 1, 0, dt, 0,
     0, 0, 0, 1, 0, 0,
     0, 0, 0, 0, 1, 0,
-    0, 0, 0, 0, 0, 1;
-
+    0, 0, 0, 0, 0 ,1;
 
   EXPECT_TRUE(EIGEN_MATRIX_NEAR(F,ekf.FSystem(state, dt), 0.0001));
 }
 
+TEST(FSystemTest, maxOmega) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  double x, y, theta, v, omega, bias;
+  double dt;
+  typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+  Matrix6d F;
+
+  x = 0;
+  y = 0;
+  v = 2;
+  theta = M_PI/3;
+  omega = 2.5;
+  dt = 0.01;
+
+  state << x, y, theta, v, omega, bias;
+  F <<
+    1, 0, -0.017443697402198, 0.004891231645538, -0.00008742229045251353, 0,
+    0, 1, 0.009782463291076, 0.008721848701099, 0.00004854890230725648, 0,
+    0, 0, 1, 0, dt, 0,
+    0, 0, 0, 1, 0, 0,
+    0, 0, 0, 0, 1, 0,
+    0, 0, 0, 0, 0 ,1;
+
+  EXPECT_TRUE(EIGEN_MATRIX_NEAR(F,ekf.FSystem(state, dt), 0.0001));
+}
 
 GTEST_API_ int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
