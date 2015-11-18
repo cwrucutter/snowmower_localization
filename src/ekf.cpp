@@ -340,10 +340,10 @@ Vector2d Ekf::hEnc(Vector6d state, double b, double tpmRight, double tpmLeft,
 Matrix26 Ekf::HEnc(Vector6d state, double b, double tpmRight, double tpmLeft,
 		   double dt){
   // Calculate H
-  double H14 = dt;
-  double H15 = b/2*dt;
-  double H24 = dt;
-  double H25 = -b/2*dt;
+  double H14 = tpmRight * dt;
+  double H15 = b/2 * tpmRight * dt;
+  double H24 = tpmLeft * dt;
+  double H25 = -b/2 * tpmLeft *dt;
 
   Matrix26 H;
   H << 0, 0, 0, H14, H15, 0,
