@@ -24,9 +24,9 @@
     <!-- Wheel Encoder Initialization -->
     <!-- Entries in the R matrix for the wheel encoders -->
     <rosparam param="Enc_R">[0.01, 0.0, 0.0, 0.01]</rosparam>
-    <param name="track_width" value="2.0" type="double"/>
-    <param name="tpm_right" value="25000.0" type="double"/>
-    <param name="tpm_left" value="25000.0" type="double"/>
+    <param name="track_width" value="0.55" type="double"/>
+    <param name="tpm_right" value="26500.0" type="double"/>
+    <param name="tpm_left" value="27150.0" type="double"/>
 
     <!-- IMU Initialization -->
     <param name="R_IMU" value="0.000009789186194223082" type="double"/>
