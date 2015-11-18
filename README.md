@@ -28,11 +28,11 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Code up the equations for the system model.
 
-* Account for omega in denominator in F function.
+* **DONE** Account for omega in denominator in F function.
 
 * **DONE** Write tests for system f.
 
-* Write tests for system F
+* **DONE** Write tests for system F
 
 * **DONE** Code decawave measurement model.
 
@@ -51,6 +51,8 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 * Write tests for IMU H.
 
 * **DONE** Code up Encoder measurement model.
+
+* Initialize time and pervious tick count for encoders.
 
 * **DONE** Write tests for Encoder h.
 
