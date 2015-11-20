@@ -35,9 +35,9 @@ SOFTWARE.
 // DecaWave callback function
 void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
-  ekf_.systemUpdate(dtSys);
   Vector4d z;
   z << msg.dist[1], msg.dist[2], msg.dist[3],msg.dist[4];
+  ekf_.systemUpdate(dtSys);
   ekf_.measurementUpdateDecaWave(z);
   publishState();
 }
@@ -48,20 +48,24 @@ void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
   double dtEnc = dtEncoder(msg.header.stamp);
   ROS_INFO_STREAM("dtSys = " << dtSys);
   ROS_INFO_STREAM("dtEnc = " << dtEnc);
-  ekf_.systemUpdate(dtSys);
   Vector2i z;
   z << msg.right, msg.left;
-  ekf_.measurementUpdateEncoders(z, zPre_, dtEnc);
-  publishState();
+  // If first Run, only initialize zPre_, lastSysTime_, and lastEncTime_.
+  if (!firstRunEnc_) {
+    ekf_.systemUpdate(dtSys);
+    ekf_.measurementUpdateEncoders(z, zPre_, dtEnc);
+    publishState();
+  }
   // Store current measurement as zPre_
   zPre_ = z;
+  firstRunEnc_ = false;
 }
 
 // Imu callback function
 void EkfNode::imuSubCB(const sensor_msgs::Imu& msg){
   double dtSys = dtSystem(msg.header.stamp);
-  ekf_.systemUpdate(dtSys);
   double z = msg.angular_velocity.z;
+  ekf_.systemUpdate(dtSys);
   ekf_.measurementUpdateIMU(z);
   publishState();
 }
@@ -120,6 +124,9 @@ void EkfNode::publishState(){
 
   // Initialization process
 void EkfNode::init() {
+  // Set first run to true for encoders. Once a message is received, this will
+  // be set to false.
+  firstRunEnc_ = true;
   // Set Times
   ros::Time currTime = ros::Time::now();
   lastEncTime_ = currTime;

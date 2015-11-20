@@ -58,6 +58,9 @@ class EkfNode {
   std::string base_frame_; // Frame of the robot
   std::string map_frame_;  // Frame of the map
 
+  // Check if an encoder message has been recieved yet. First time, just
+  // initialize zPre_, lastSysTime_, and lastEncTime.
+  bool firstRunEnc_;
   // Store the time of the last System update. This is used to determine dt.
   ros::Time lastSysTime_;
   // Store the time of the last Encoder update. This is used to determine speed
