@@ -26,7 +26,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 
-#include <ros/ros.h>
 #include <math.h>
 #include <boost/array.hpp>
 #include <Eigen/LU>
