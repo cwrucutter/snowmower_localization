@@ -25,7 +25,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ******************************************************************************/
 #include <ros/ros.h>
-#include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
 #include <sensor_msgs/Imu.h>
 #include <snowmower_msgs/EncMsg.h>
 #include <snowmower_msgs/DecaWaveMsg.h>
@@ -37,9 +37,11 @@ void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
   Vector4d z;
   z << msg.dist[1], msg.dist[2], msg.dist[3],msg.dist[4];
-  ekf_.systemUpdate(dtSys);
-  ekf_.measurementUpdateDecaWave(z);
-  publishState();
+  // Update system and decawave measurement models for ekf_map_
+  ekf_map_.systemUpdate(dtSys);
+  ekf_map_.measurementUpdateDecaWave(z);
+  // and publish odom message and update transform tree
+  publishState(msg.header.stamp);
 }
 
 // Wheel Encoder callback function
@@ -52,9 +54,14 @@ void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
   z << msg.right, msg.left;
   // If first Run, only initialize zPre_, lastSysTime_, and lastEncTime_.
   if (!firstRunEnc_) {
-    ekf_.systemUpdate(dtSys);
-    ekf_.measurementUpdateEncoders(z, zPre_, dtEnc);
-    publishState();
+    // Update system and encoder measurement models for ekf_map_
+    ekf_map_.systemUpdate(dtSys);
+    ekf_map_.measurementUpdateEncoders(z, zPre_, dtEnc);
+    // Update system and encoder measurement models for ekf_odom_
+    ekf_odom_.systemUpdate(dtSys);
+    ekf_odom_.measurementUpdateEncoders(z, zPre_, dtEnc);
+    // and publish odom message and update transform tree
+    publishState(msg.header.stamp);
   }
   // Store current measurement as zPre_
   zPre_ = z;
@@ -65,9 +72,14 @@ void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
 void EkfNode::imuSubCB(const sensor_msgs::Imu& msg){
   double dtSys = dtSystem(msg.header.stamp);
   double z = msg.angular_velocity.z;
-  ekf_.systemUpdate(dtSys);
-  ekf_.measurementUpdateIMU(z);
-  publishState();
+  // Update system and IMU measurement models for ekf_map_
+  ekf_map_.systemUpdate(dtSys);
+  ekf_map_.measurementUpdateIMU(z);
+  // Update system and IMU measurement models for ekf_odom_
+  ekf_odom_.systemUpdate(dtSys);
+  ekf_odom_.measurementUpdateIMU(z);
+  // and publish odom message and update transform tree
+  publishState(msg.header.stamp);
 }
 
 // Determine time since the last time dtSystem() was called.
@@ -88,42 +100,91 @@ double EkfNode::dtEncoder(ros::Time currentEncTime){
 
 
   // Publish the state as an odom message on the topic odom_ekf. Alos well broadcast a transform.
-void EkfNode::publishState(){
+void EkfNode::publishState(ros::Time now){
   // Create an Odometry message to publish
   nav_msgs::Odometry state_msg;
-
+  /**************************************************************************
+   * Populate Odometry message for ekf_map_
+   **************************************************************************/
   // Populate timestamp, position frame, and velocity frame
-  state_msg.header.stamp = ros::Time::now();
+  state_msg.header.stamp = now;
   state_msg.header.frame_id = map_frame_;
   state_msg.child_frame_id = base_frame_;
-
   // Populate the position and orientation
-  state_msg.pose.pose.position.x = ekf_.state_(0); // x
-  state_msg.pose.pose.position.y = ekf_.state_(1); // y
-  state_msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(ekf_.state_(2)); // theta
-
+  state_msg.pose.pose.position.x = ekf_map_.state_(0); // x
+  state_msg.pose.pose.position.y = ekf_map_.state_(1); // y
+  state_msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(ekf_map_.state_(2)); // theta
   boost::array<double,36> temp;
   // Populate the covariance matrix
   state_msg.pose.covariance = temp;
-
   // Populate the linear and angular velocities
-  state_msg.twist.twist.linear.x = ekf_.state_(3); // v
-  state_msg.twist.twist.angular.z = ekf_.state_(4); // omega
-
+  state_msg.twist.twist.linear.x = ekf_map_.state_(3); // v
+  state_msg.twist.twist.angular.z = ekf_map_.state_(4); // omega
   // Populate the covariance matrix
   state_msg.twist.covariance = temp;
-
   // Publish the message!
-  statePub_.publish(state_msg);
+  stateMapPub_.publish(state_msg);
   // Print for debugging purposes
-  ROS_INFO_STREAM("\nstate = \n" << ekf_.state_);
-  ROS_INFO_STREAM("\ncovariance = \n" << ekf_.cov_);
-  // Now for the transform
-  // ...
+  ROS_INFO_STREAM("\nstate = \n" << ekf_map_.state_);
+  ROS_INFO_STREAM("\ncovariance = \n" << ekf_map_.cov_);
+  /**************************************************************************
+   * Populate Odometry message for ekf_odom_
+   **************************************************************************/
+  // Populate timestamp, position frame, and velocity frame
+  state_msg.header.stamp = now;
+  state_msg.header.frame_id = odom_frame_;
+  state_msg.child_frame_id = base_frame_;
+  // Populate the position and orientation
+  state_msg.pose.pose.position.x = ekf_odom_.state_(0); // x
+  state_msg.pose.pose.position.y = ekf_odom_.state_(1); // y
+  state_msg.pose.pose.orientation = tf::createQuaternionMsgFromYaw(ekf_odom_.state_(2)); // theta
+  // Populate the covariance matrix
+  state_msg.pose.covariance = temp;
+  // Populate the linear and angular velocities
+  state_msg.twist.twist.linear.x = ekf_odom_.state_(3); // v
+  state_msg.twist.twist.angular.z = ekf_odom_.state_(4); // omega
+  // Populate the covariance matrix
+  state_msg.twist.covariance = temp;
+  // Publish the message!
+  stateOdomPub_.publish(state_msg);
+  /**************************************************************************
+   * Create and broadcast transforms for map->odom and odom->base_link
+   **************************************************************************/
+  static tf::TransformBroadcaster br;
+  // First create and broadcast odom->base_link since we already have that.
+  tf::Transform odom2base;
+  odom2base.setOrigin(tf::Vector3(ekf_odom_.state_(0), ekf_odom_.state_(1), 0.0));
+  tf::Quaternion q;
+  q.setRPY(0.0, 0.0, ekf_odom_.state_(2));
+  odom2base.setRotation(q);
+  br.sendTransform(tf::StampedTransform(odom2base, now, odom_frame_, base_frame_));
+  // Now create and broadcast map->odom. But, first we must calculate this from
+  // map->base_link and odom->base_link.
+  tf::Transform map2odom;
+  double x2 = ekf_odom_.state_(0);
+  double y2 = ekf_odom_.state_(1);
+  double theta2 = ekf_odom_.state_(2);
+  double x3 = ekf_map_.state_(0);
+  double y3 = ekf_map_.state_(1);
+  double theta3 = ekf_map_.state_(2);
+  double x1 = cos(theta3)*(-x2*cos(theta2)-y2*sin(theta2))
+             -sin(theta3)*( x2*sin(theta2)-y2*cos(theta2))
+             +x3;
+  double y1 = sin(theta3)*(-x2*cos(theta2)-y2*sin(theta2))
+             +cos(theta3)*( x2*sin(theta2)-y2*cos(theta2))
+             +y3;
+  double theta1 = theta3 - theta2;
+  map2odom.setOrigin(tf::Vector3(x1, y1, 0.0));
+  q.setRPY(0.0, 0.0, theta1);
+  map2odom.setRotation(q);
+  br.sendTransform(tf::StampedTransform(map2odom, now, map_frame_, odom_frame_));
 } 
 
   // Initialization process
 void EkfNode::init() {
+  /**************************************************************************
+   * Initialize firstRun, time, and frame names
+   **************************************************************************/
   // Set first run to true for encoders. Once a message is received, this will
   // be set to false.
   firstRunEnc_ = true;
@@ -134,9 +195,14 @@ void EkfNode::init() {
   // Use the ROS parameter server to initilize parameters
   if(!private_nh_.getParam("base_frame", base_frame_))
     base_frame_ = "base_link";
+  if(!private_nh_.getParam("odom_frame", base_frame_))
+    odom_frame_ = "odom";
   if(!private_nh_.getParam("map_frame", map_frame_))
     map_frame_ = "map";
 
+  /**************************************************************************
+   * Initialize state for ekf_odom_ and ekf_map_
+   **************************************************************************/
   // Create temp array to initialize state
   double state_temp[] = {0, 0, 0, 0, 0, 0};
   // And a std::vector, which will be used to initialize an Eigen Matrix
@@ -154,8 +220,15 @@ void EkfNode::init() {
   Vector6d stateMat(state.data());
   std::cout << "state = " << std::endl;
   std::cout << stateMat << std::endl;
-  ekf_.initState(stateMat);
+  ekf_map_.initState(stateMat);
 
+  // Odom is always initialized at all zeros.
+  stateMat << 0, 0, 0, 0, 0, 0;
+  ekf_odom_.initState(stateMat);
+
+  /**************************************************************************
+   * Initialize covariance for ekf_odom_ and ekf_map_
+   **************************************************************************/
   // Create temp array to initialize covariance
   double cov_temp[] = {0.01, 0, 0, 0, 0, 0,
 		       0, 0.01, 0, 0, 0, 0,
@@ -178,8 +251,15 @@ void EkfNode::init() {
   Matrix66 covMat(cov.data());
   std::cout << "covariance = " << std::endl;
   std::cout << covMat << std::endl;
-  ekf_.initCov(covMat);
+  ekf_map_.initCov(covMat);
 
+  // Initialize odom covariance the same as the map covariance (this isn't
+  // correct. But, since it is all an estimate anyway, it should be fine.
+  ekf_odom_.initCov(covMat);
+
+  /**************************************************************************
+   * Initialize Q for ekf_odom_ and ekf_map_
+   **************************************************************************/
   // Create temp array to initialize Q
   double Q_temp[] = {0.01, 0, 0, 0, 0, 0,
 		     0, 0.01, 0, 0, 0, 0,
@@ -201,8 +281,12 @@ void EkfNode::init() {
   Matrix66 QMat(Q.data());
   std::cout << "Q = " << std::endl;
   std::cout << QMat << std::endl;
-  ekf_.initSystem(QMat);
+  ekf_map_.initSystem(QMat);
+  ekf_odom_.initSystem(QMat);
 
+  /**************************************************************************
+   * Initialize Decawave for ekf_map_ (not used in ekf_odom_)
+   **************************************************************************/
   // Create temp array to initialize R for DecaWave
   double RDW_temp[] = {0.01, 0, 0, 0,
 		       0, 0.01, 0, 0,
@@ -257,8 +341,12 @@ void EkfNode::init() {
   std::cout << "DecaWaveOffset = " << std::endl;
   std::cout << DecaWaveOffset << std::endl;
 
-  ekf_.initDecaWave(RDWMat, DWBLMat, DecaWaveOffset);
+  ekf_map_.initDecaWave(RDWMat, DWBLMat, DecaWaveOffset);
+  // Decawave is not used in odom, so no need to initialize
 
+  /**************************************************************************
+   * Initialize Encoders for ekf_odom_ and ekf_map_
+   **************************************************************************/
   // Create temp array to initialize R for DecaWave
   double REnc_temp[] = {0.01, 0,
 			0, 0.01};
@@ -285,17 +373,24 @@ void EkfNode::init() {
     tpmRight = 1;
   if(!private_nh_.getParam("tpm_left", tpmLeft))
     tpmLeft = 1;
-  ekf_.initEnc(REncMat, b, tpmRight, tpmLeft);
+  ekf_map_.initEnc(REncMat, b, tpmRight, tpmLeft);
+  ekf_odom_.initEnc(REncMat, b, tpmRight, tpmLeft);
   std::cout << "track_width = " << b << std::endl;
   std::cout << "tpm_right   = " << tpmRight << std::endl;
   std::cout << "tpm_left    = " << tpmLeft << std::endl;
 
+  /**************************************************************************
+   * Initialize IMU for ekf_odom_ and ekf_map_
+   **************************************************************************/
   double RIMU;
   if(!private_nh_.getParam("R_IMU", RIMU))
     RIMU = 0.01;
-  ekf_.initIMU(RIMU);
+  ekf_map_.initIMU(RIMU);
+  ekf_odom_.initIMU(RIMU);
   std::cout << "R_IMU = " << RIMU << std::endl;
 
+  // Publish the initialized state and exit initialization.
+  publishState(currTime);
   ROS_INFO_STREAM("Finished with initialization.");
 }
 
@@ -303,8 +398,9 @@ void EkfNode::init() {
 /* Constructor */
 EkfNode::EkfNode(): private_nh_("~") {
 
-  // Create a publisher object to publish the determined state of the robot. Odometry messages contain both Pose and Twist with covariance. In this simulator, we will not worry about the covariance.
-  statePub_ = public_nh_.advertise<nav_msgs::Odometry>("odom_ekf",1);
+  // Create a publisher object to publish the determined state of the robot. Odometry messages contain both Pose and Twist with covariance.
+  stateMapPub_ = public_nh_.advertise<nav_msgs::Odometry>("odom_map",1);
+  stateOdomPub_ = public_nh_.advertise<nav_msgs::Odometry>("odom",1);
 
   // Create a subscriber object to subscribe to the topic 
   dwSub_ = public_nh_.subscribe("dw_beacons",1,&EkfNode::dwSubCB,this);

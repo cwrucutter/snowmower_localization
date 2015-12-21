@@ -16,11 +16,13 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * Remove dependency on boost library in pubState function.
 
-* Add transform broadcaster to pubState function.
+* **DONE** Add second ekf object that only updates in odometry callback functions. Call them ekf_odom_ and ekf_map_.
+
+* **DONE** Add transform broadcaster to pubState function.
 
 * Populate odometry message with Covariances.
 
-* Initialize everything!
+* **DONE** Initialize everything!
 
 * **DONE** Create callback functions for subscribers.
 
@@ -52,7 +54,7 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Code up Encoder measurement model.
 
-* Initialize time and pervious tick count for encoders.
+* **DONE** Initialize time and pervious tick count for encoders.
 
 * **DONE** Write tests for Encoder h.
 
@@ -62,7 +64,7 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * Make Covariance matricies variable, a la Eric Perko.
 
-* Set frame_id and child_frame_id using parameters.
+* **DONE** Set frame_id and child_frame_id using parameters.
 
 * **DONE** Write code to determine dt (The plan is to run a system and measurement update each time a measurement is recieved.)
 

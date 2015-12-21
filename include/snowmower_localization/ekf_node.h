@@ -37,12 +37,14 @@ SOFTWARE.
 class EkfNode {
 
  private:
-  Ekf ekf_;
+  Ekf ekf_odom_;
+  Ekf ekf_map_;
 
   // Node specific stuff
   ros::NodeHandle public_nh_;
   ros::NodeHandle private_nh_;
-  ros::Publisher statePub_;
+  ros::Publisher stateMapPub_;
+  ros::Publisher stateOdomPub_;
   ros::Subscriber dwSub_;
   ros::Subscriber imuSub_;
   ros::Subscriber encSub_;
@@ -53,9 +55,10 @@ class EkfNode {
   void imuSubCB(const sensor_msgs::Imu& msg);
 
   // Publish the state as an odom message on the topic odom_ekf. Also well broadcast a tansform.
-  void publishState(); 
+  void publishState(ros::Time now); 
 
   std::string base_frame_; // Frame of the robot
+  std::string odom_frame_; // Frame of odom
   std::string map_frame_;  // Frame of the map
 
   // Check if an encoder message has been recieved yet. First time, just
