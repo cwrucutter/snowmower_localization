@@ -403,7 +403,7 @@ EkfNode::EkfNode(): private_nh_("~") {
   stateOdomPub_ = public_nh_.advertise<nav_msgs::Odometry>("odom",1);
 
   // Create a subscriber object to subscribe to the topic 
-  dwSub_ = public_nh_.subscribe("dw_beacons",1,&EkfNode::dwSubCB,this);
+  dwSub_ = public_nh_.subscribe("dw/t0/data",1,&EkfNode::dwSubCB,this);
   imuSub_ = public_nh_.subscribe("imu/data",1,&EkfNode::imuSubCB,this);
   encSub_ = public_nh_.subscribe("enc",1,&EkfNode::encSubCB,this);
 
