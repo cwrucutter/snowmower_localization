@@ -218,13 +218,15 @@ void EkfNode::init() {
   // And initialize the Matrix
   typedef Matrix<double, 6, 1> Vector6d;
   Vector6d stateMat(state.data());
-  std::cout << "state = " << std::endl;
+  std::cout << "state_map = " << std::endl;
   std::cout << stateMat << std::endl;
   ekf_map_.initState(stateMat);
 
   // Odom is always initialized at all zeros.
   stateMat << 0, 0, 0, 0, 0, 0;
   ekf_odom_.initState(stateMat);
+  std::cout << "state_odom = " << std::endl;
+  std::cout << stateMat << std::endl;
 
   /**************************************************************************
    * Initialize covariance for ekf_odom_ and ekf_map_
