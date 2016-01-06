@@ -40,6 +40,8 @@ void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   // Update system and decawave measurement models for ekf_map_
   ekf_map_.systemUpdate(dtSys);
   ekf_map_.measurementUpdateDecaWave(z);
+  // Update only the system model for ekf_odom_ (decawave is not used in odom)
+  ekf_odom_.systemUpdate(dtSys);
   // and publish odom message and update transform tree
   publishState(msg.header.stamp);
 }
