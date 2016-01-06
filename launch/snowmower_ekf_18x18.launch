@@ -7,7 +7,8 @@
     <!-- All matricies are created from arrays in column major order. -->
 
     <!-- State and Covariance Initialization -->
-    <rosparam param="state">[2.7432, 2.7432 , 1.570796327, 0.0 ,0.0 ,0.0]</rosparam>
+    <rosparam param="state">[2.7432, 2.7432 , 0, 0.0 ,0.0 ,0.0]</rosparam>
+    <!-- <rosparam param="state">[2.7432, 2.7432 , 1.570796327, 0.0 ,0.0 ,0.0]</rosparam> -->
     <rosparam param="covariance">[100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100]</rosparam>
 
     <!-- System Initialization -->
