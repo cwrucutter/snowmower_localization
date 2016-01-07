@@ -16,15 +16,17 @@
 
     <!-- DecaWave Initialization -->
     <!-- Entries in the R matrix for the decawave beacons -->
-    <rosparam param="DW_R">[0.001, 0, 0, 0, 0, 0.001, 0, 0, 0, 0, 0.001, 0, 0, 0, 0, 0.001]</rosparam>
+    <rosparam param="DW_R">[0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0.01]</rosparam>
     <!-- Beacon Location x-y [x1, y1, x2, y2, x3, y3, x4, y4] -->
     <rosparam param="DW_Beacon_Loc">[0.0, 0.0, 0.0, 5.4864, 5.4864, 5.4864, 5.4864, 0.0]</rosparam>
+    <!-- <param name="DW_offset_x" value="0" type="double"/> -->
+    <!-- <param name="DW_offset_y" value="0" type="double"/> -->
     <param name="DW_offset_x" value="-0.4" type="double"/>
     <param name="DW_offset_y" value="-0.1" type="double"/>
 
     <!-- Wheel Encoder Initialization -->
     <!-- Entries in the R matrix for the wheel encoders -->
-    <rosparam param="Enc_R">[0.01, 0.0, 0.0, 0.01]</rosparam>
+    <rosparam param="Enc_R">[0.1, 0.0, 0.0, 0.1]</rosparam>
     <param name="track_width" value="0.55" type="double"/>
     <param name="tpm_right" value="26500.0" type="double"/>
     <param name="tpm_left" value="27150.0" type="double"/>
