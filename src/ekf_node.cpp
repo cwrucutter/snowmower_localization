@@ -35,15 +35,21 @@ SOFTWARE.
 // DecaWave callback function
 void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
+  ROS_INFO_STREAM("dtSys = " << dtSys);
   Vector4d z;
-  z << msg.dist[1], msg.dist[2], msg.dist[3],msg.dist[4];
-  // Update system and decawave measurement models for ekf_map_
-  ekf_map_.systemUpdate(dtSys);
-  ekf_map_.measurementUpdateDecaWave(z);
-  // Update only the system model for ekf_odom_ (decawave is not used in odom)
-  ekf_odom_.systemUpdate(dtSys);
-  // and publish odom message and update transform tree
-  publishState(msg.header.stamp);
+  z << msg.dist[0], msg.dist[1], msg.dist[2],msg.dist[3];
+  ROS_INFO_STREAM("dw = \n" << z);
+  // If first Run, only initialize lastSystTime_
+  if (!firstRunSys_) { 
+    // Update system and decawave measurement models for ekf_map_
+    ekf_map_.systemUpdate(dtSys);
+    ekf_map_.measurementUpdateDecaWave(z);
+    // Update only the system model for ekf_odom_ (decawave is not used in odom)
+    ekf_odom_.systemUpdate(dtSys);
+    // and publish odom message and update transform tree
+    publishState(msg.header.stamp);
+  }
+  firstRunSys_ = false;
 }
 
 // Wheel Encoder callback function
@@ -68,20 +74,25 @@ void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
   // Store current measurement as zPre_
   zPre_ = z;
   firstRunEnc_ = false;
+  firstRunSys_ = false;
 }
 
 // Imu callback function
 void EkfNode::imuSubCB(const sensor_msgs::Imu& msg){
   double dtSys = dtSystem(msg.header.stamp);
   double z = msg.angular_velocity.z;
-  // Update system and IMU measurement models for ekf_map_
-  ekf_map_.systemUpdate(dtSys);
-  ekf_map_.measurementUpdateIMU(z);
-  // Update system and IMU measurement models for ekf_odom_
-  ekf_odom_.systemUpdate(dtSys);
-  ekf_odom_.measurementUpdateIMU(z);
-  // and publish odom message and update transform tree
-  publishState(msg.header.stamp);
+  // If first Run, only initialize lastSystTime_
+  if (!firstRunSys_) { 
+    // Update system and IMU measurement models for ekf_map_
+    ekf_map_.systemUpdate(dtSys);
+    ekf_map_.measurementUpdateIMU(z);
+    // Update system and IMU measurement models for ekf_odom_
+    ekf_odom_.systemUpdate(dtSys);
+    ekf_odom_.measurementUpdateIMU(z);
+    // and publish odom message and update transform tree
+    publishState(msg.header.stamp);
+  }
+  firstRunSys_ = false;
 }
 
 // Determine time since the last time dtSystem() was called.
@@ -190,6 +201,7 @@ void EkfNode::init() {
   // Set first run to true for encoders. Once a message is received, this will
   // be set to false.
   firstRunEnc_ = true;
+  firstRunSys_ = true;
   // Set Times
   ros::Time currTime = ros::Time::now();
   lastEncTime_ = currTime;

@@ -64,6 +64,7 @@ class EkfNode {
   // Check if an encoder message has been recieved yet. First time, just
   // initialize zPre_, lastSysTime_, and lastEncTime.
   bool firstRunEnc_;
+  bool firstRunSys_;
   // Store the time of the last System update. This is used to determine dt.
   ros::Time lastSysTime_;
   // Store the time of the last Encoder update. This is used to determine speed
