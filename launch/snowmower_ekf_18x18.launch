@@ -9,10 +9,10 @@
     <!-- State and Covariance Initialization -->
     <rosparam param="state">[2.7432, 2.7432 , 0, 0.0 ,0.0 ,0.0]</rosparam>
     <!-- <rosparam param="state">[2.7432, 2.7432 , 1.570796327, 0.0 ,0.0 ,0.0]</rosparam> -->
-    <rosparam param="covariance">[100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100]</rosparam>
+    <rosparam param="covariance">[0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1]</rosparam>
 
     <!-- System Initialization -->
-    <rosparam param="Q">[0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01]</rosparam>
+    <rosparam param="Q">[10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10]</rosparam>
 
     <!-- DecaWave Initialization -->
     <!-- Entries in the R matrix for the decawave beacons -->
@@ -21,8 +21,8 @@
     <rosparam param="DW_Beacon_Loc">[0.0, 0.0, 0.0, 5.4864, 5.4864, 5.4864, 5.4864, 0.0]</rosparam>
     <!-- <param name="DW_offset_x" value="0" type="double"/> -->
     <!-- <param name="DW_offset_y" value="0" type="double"/> -->
-    <param name="DW_offset_x" value="-0.4" type="double"/>
-    <param name="DW_offset_y" value="-0.1" type="double"/>
+    <param name="DW_offset_x" value="-0.66846" type="double"/>
+    <param name="DW_offset_y" value="-0.11684" type="double"/>
 
     <!-- Wheel Encoder Initialization -->
     <!-- Entries in the R matrix for the wheel encoders -->
@@ -32,7 +32,7 @@
     <param name="tpm_left" value="27150.0" type="double"/>
 
     <!-- IMU Initialization -->
-    <param name="R_IMU" value="0.000009789186194223082" type="double"/>
+    <param name="R_IMU" value="0.00000978918619422308" type="double"/>
   </node>
 
 </launch>
