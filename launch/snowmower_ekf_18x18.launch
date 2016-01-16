@@ -9,10 +9,10 @@
     <!-- State and Covariance Initialization -->
     <rosparam param="state">[2.7432, 2.7432 , 0, 0.0 ,0.0 ,0.0]</rosparam>
     <!-- <rosparam param="state">[2.7432, 2.7432 , 1.570796327, 0.0 ,0.0 ,0.0]</rosparam> -->
-    <rosparam param="covariance">[0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0.1]</rosparam>
+    <rosparam param="covariance">[100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100]</rosparam>
 
     <!-- System Initialization -->
-    <rosparam param="Q">[10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10]</rosparam>
+    <rosparam param="Q">[0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01]</rosparam>
 
     <!-- DecaWave Initialization -->
     <!-- Entries in the R matrix for the decawave beacons -->
