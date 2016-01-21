@@ -311,8 +311,21 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   Matrix46 H;
   H = HDecaWave(state_, DecaWaveBeaconLoc_, DecaWaveOffset_);
   // Find Kalman Gain
+  // First check if any z values are -1 (i.e. a bad measurement). If so, make
+  // the corresponding entry in RDecaWave_ very high for this iteration. This
+  // effectively cancels out any influence by that measurement on the update.
+  Matrix4d RDecaWaveTemp;
+  for (int i = 0; i < z.rows(); i++) {
+    if (z(i) < 0) {
+      RDecaWaveTemp(i,i) = 99999;
+    }
+    else {
+      RDecaWaveTemp(i,i) = RDecaWave_(i,i);
+    }
+  }
+  // Now go on to calculate the Kalman gain with the new R value.
   Matrix64 K;
-  K = KDecaWave(cov_, H, RDecaWave_);
+  K = KDecaWave(cov_, H, RDecaWaveTemp);
   // Find new state
   state_ = stateUpdateDecaWave(state_, K, z, h);
   // Find new covariance

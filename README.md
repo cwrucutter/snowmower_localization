@@ -26,7 +26,7 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * **DONE** Create callback functions for subscribers.
 
-* Interpret value of -1 from decawave anchor as invalid and calculate measurment update accordingly.
+* **DONE** Interpret value of -1 from decawave anchor as invalid and calculate measurment update accordingly.
 
 * Make decawave callback function open to any number of beacons.
 
