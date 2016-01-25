@@ -175,6 +175,7 @@ void Ekf::systemUpdate(double dt){
   F = FSystem(state_,dt);
   // Then update covariance
   cov_ = F*cov_*F.transpose() + Q_;
+  cov_ = zeroOutBiasXYThetaCov(cov_);
 }
 
 /***********************
@@ -330,6 +331,8 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   state_ = stateUpdateDecaWave(state_, K, z, h);
   // Find new covariance
   cov_ = covUpdateDecaWave(cov_, K, H);
+  cov_ = zeroOutBiasXYThetaCov(cov_);
+
 }
 
 /***********************
@@ -406,6 +409,8 @@ void Ekf::measurementUpdateEncoders(Vector2i z, Vector2i zPre, double dt){
   state_ = stateUpdateEnc(state_, K, z, h);
   // Find new covariance
   cov_ = covUpdateEnc(cov_, K, H);
+  cov_ = zeroOutBiasXYThetaCov(cov_);
+
 }
 
 /***********************
@@ -471,6 +476,8 @@ void Ekf::measurementUpdateIMU(double z){ // z is omega_z
   state_ = stateupdateIMU(state_, K, z, h);
   // Find new covariance
   cov_ = covUpdateIMU(cov_, K, H);
+  cov_ = zeroOutBiasXYThetaCov(cov_);
+
 }
 
 void Ekf::initState(Vector6d state) {
@@ -498,6 +505,18 @@ void Ekf::initEnc(Matrix2d R, double b, double tpmRight, double tpmLeft) {
 
 void Ekf::initIMU(double R) {
   RIMU_ = R;
+}
+
+Matrix6d Ekf::zeroOutBiasXYThetaCov(Matrix6d cov) {
+  Matrix6d covNew;
+  covNew = cov;
+  covNew(0,5) = 0;
+  covNew(1,5) = 0;
+  covNew(2,5) = 0;
+  covNew(5,0) = 0;
+  covNew(5,1) = 0;
+  covNew(5,2) = 0;
+  return covNew;
 }
 
 

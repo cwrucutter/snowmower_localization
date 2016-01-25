@@ -137,6 +137,11 @@ class Ekf {
 			  double h);
   Matrix6d covUpdateIMU(Matrix6d cov, Vector6d K, Matrix16 H);
   void measurementUpdateIMU(double z); // z is omega_z
+
+  // Other functions
+  // Function that zeros out the covariance between x, y, and theta, and the
+  // yaw rate bias. Explanation found in Eric Perko's thesis.
+  Matrix6d zeroOutBiasXYThetaCov(Matrix6d cov);
   
   //public:
   Ekf();

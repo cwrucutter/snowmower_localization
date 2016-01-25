@@ -64,6 +64,8 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 
 * Determine covariance matricies for system and measurement models.
 
+* **DONE** Remove ifluence of x, y, and theta on yaw rate bias by making those parts of the covariance matrix 0, a la Eric Perko.
+
 * Make Covariance matricies variable, a la Eric Perko.
 
 * **DONE** Set frame_id and child_frame_id using parameters.
