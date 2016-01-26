@@ -10,6 +10,8 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 * [catkin_simple](https://github.com/catkin/catkin_simple)
 
 ## To Do
+* Make sure we are not taking square root of a negative value when there is a decawve measurement of -1 (i.e. bad measurement).
+
 * Reduce intitial covariance and see if it reduces drift at beginning.
 
 * **DONE** Add common parameters to a yaml file. State and beacon location can still be set in individual launch files.
