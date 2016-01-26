@@ -1,0 +1,32 @@
+# This yaml file initializes all the common parameters for the EKF.
+# State (x,y,theta,v,omega,bias) and DecaWave Beacon Locations are initialized
+# in the launch file
+
+# Frame names
+base_frame: base_link
+map_frame: map
+# All matricies are created from arrays in column major order.
+# state initialized in launch file
+covariance: [100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 0, 100]
+
+# System Initialization
+Q: [0.000001, 0, 0, 0, 0, 0, 0, 0.000001, 0, 0, 0, 0, 0, 0, 0.000001, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0.0000000001]
+
+# DecaWave Initialization
+# Entries in the R matrix for the decawave beacons
+DW_R: [0.0030, 0, 0, 0, 0, 0.0017, 0, 0, 0, 0, 0.0642, 0, 0, 0, 0, 0.0015]
+# Beacon Location x-y [x1, y1, x2, y2, x3, y3, x4, y4]
+# Done in launch file
+# DW_Beacon_Loc: [0.0, 0.0, 7.0, 0.0, 7.0, 10.0, 0.0, 10.0]
+DW_offset_x: -0.7072
+DW_offset_y: -0.2008
+
+# Wheel Encoder Initialization
+# Entries in the R matrix for the wheel encoders
+Enc_R: [0.1, 0.0, 0.0, 0.1]
+track_width: 0.55
+tpm_right: 26500.0
+tpm_left: 27150.0
+
+# IMU Initialization
+R_IMU: 0.0000094561

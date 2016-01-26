@@ -10,6 +10,10 @@ In order to do unit tests on Eigen Matrix objects with meaningful output in the 
 * [catkin_simple](https://github.com/catkin/catkin_simple)
 
 ## To Do
+* Reduce intitial covariance and see if it reduces drift at beginning.
+
+* **DONE** Add common parameters to a yaml file. State and beacon location can still be set in individual launch files.
+
 * **DONE** Create an EKF class.
 
 * **DONE** Include publishers and subscribers.
