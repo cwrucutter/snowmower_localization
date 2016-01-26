@@ -31,6 +31,7 @@ SOFTWARE.
 #include <Eigen/LU>
 #include "snowmower_localization/ekf.h"
 #include <iostream>
+#include <cfloat> // for DBL_MAX
 
 // (6x1) state_, fSystem, KIMU, stateUpdate
 typedef Matrix<double, 6, 1> Vector6d;
@@ -318,7 +319,7 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   Matrix4d RDecaWaveTemp;
   for (int i = 0; i < z.rows(); i++) {
     if (z(i) < 0) {
-      RDecaWaveTemp(i,i) = 99999;
+      RDecaWaveTemp(i,i) = 1e20;
     }
     else {
       RDecaWaveTemp(i,i) = RDecaWave_(i,i);
