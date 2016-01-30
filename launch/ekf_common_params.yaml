@@ -15,7 +15,7 @@ Q: [0.0001, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0, 0, 0
 # DecaWave Initialization
 # Entries in the R matrix for the decawave beacons
 # DW_R: [0.0030, 0, 0, 0, 0, 0.0017, 0, 0, 0, 0, 0.0642, 0, 0, 0, 0, 0.0015]
-DW_R: [2.5, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 2.5]
+DW_R: [2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2]
 # Beacon Location x-y [x1, y1, x2, y2, x3, y3, x4, y4]
 # Done in launch file
 # DW_Beacon_Loc: [0.0, 0.0, 7.0, 0.0, 7.0, 10.0, 0.0, 10.0]
