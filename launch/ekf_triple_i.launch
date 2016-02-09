@@ -2,9 +2,10 @@
   <!-- Launch the ekf node -->
   <node pkg="snowmower_localization" type="ekf_node" name="ekf" output="screen">
     <!-- State Initialization [x, y, theta, v, omega, bias] -->
-    <rosparam param="state">[1.75, 1 , 1.57079632679, 0.0 ,0.0 ,0.0]</rosparam>
+    <rosparam param="state">[3.5, 1.0 , 1.57079632679, 0.0 ,0.0 ,0.0]</rosparam>
     <!-- Beacon Location x-y [x1, y1, x2, y2, x3, y3, x4, y4] -->
-    <rosparam param="DW_Beacon_Loc">[0.3, 0.3, 3.7, 0.3, 3.7, 14.7, 0.3, 14.7]</rosparam>
+    <rosparam param="DW_Beacon_Loc">[0.3, 0.3, 6.7, 0.3, 6.7, 14.7, 0.3, 14.7]</rosparam>
+    <!-- <rosparam param="DW_Beacon_Loc">[0, 0, 7, 0, 7, 15, 0, 15]</rosparam> -->
     <!-- Then load the rest of the common paramters -->
     <rosparam command="load" file="$(find snowmower_localization)/launch/ekf_common_params.yaml"/>
   </node>
