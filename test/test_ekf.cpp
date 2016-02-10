@@ -32,59 +32,132 @@ SOFTWARE.
 #include <eigen-checks/gtest.h>
 #include "snowmower_localization/ekf.h"
 
+/******************************************************************************
+ * Testing:                                                                  *
+ * Vector6d Ekf::fSystem(Vector6d state, double dt)                          *
+ *****************************************************************************
+ * zero velocity and zero angular velocity, i.e. standing still.             *
+ *****************************************************************************/
+TEST(fSystemTest, ZeroVelZeroOmega) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+  Eigen::MatrixXd stateNew(6,1);
+  double dt;
+
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with a velocity of 0 m/s for 0.1 s.
+  state << 0, 0, 0, 0, 0, 0;
+  dt = 0.1;
+  // Should end at (1,0) with a speed of 10 m/s
+  stateNew << 0, 0, 0, 0, 0, 0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with a velocity of 0 m/s for 0 s.
+  state << 0, 0, 0, 0, 0, 0;
+  dt = 0;
+  // Should end at (1,0) with a speed of 10 m/s
+  stateNew << 0, 0, 0, 0, 0, 0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+}
+
+/******************************************************************************
+ * Testing:                                                                  *
+ * Vector6d Ekf::fSystem(Vector6d state, double dt)                          *
+ *****************************************************************************
+ * Positive velocity and zero angular velocity, i.e. a straight line.        *
+ *****************************************************************************/
 TEST(fSystemTest, PosVelZeroOmega) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
   Eigen::MatrixXd stateNew(6,1);
   double dt;
 
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with a velocity of 10 m/s for 0.1 s.
   state << 0, 0, 0, 10, 0, 0;
   dt = 0.1;
+  // Should end at (1,0) with a speed of 10 m/s
   stateNew << 1, 0, 0, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with a velocity of 10 m/s for 10 s.
   dt = 10;
+  // Should end at (100,0) with a speed of 10 m/s
   stateNew << 100, 0, 0, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing in the -x directions (heading is pi)
+  // with a velocity of 10 m/s for 0.1 s.
   state << 0, 0, M_PI, 10, 0, 0;
   dt = 0.1;
+  // Should end at (-1,0) with a speed of 10 m/s
+  // Heading should change to -pi due to forced angle wrap between [-pi,pi)
   stateNew << -1, 0, -M_PI, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing 45 degrees off of horizontal (heading is pi/4)
+  // with a velocity of 10 m/s for 0.1 s.
   state << 0, 0, M_PI_4, 10, 0, 0;
   dt = 0.1;
+  // Should end at (sqrt(2)/2,sqrt(2)/2) with a speed of 10 m/s
+  // and a heading of pi/4
   stateNew << sqrt(2)/2, sqrt(2)/2, M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing 135 degrees off of horizontal (heading is 3*pi/4)
+  // with a velocity of 10 m/s for 0.1 s.
   state << 0, 0, 3*M_PI_4, 10, 0, 0;
   dt = 0.1;
+  // Should end at (-sqrt(2)/2,sqrt(2)/2) with a speed of 10 m/s
+  // and a heading of 3*pi/4
   stateNew << -sqrt(2)/2, sqrt(2)/2, 3*M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing 215 degrees off of horizontal (heading is 5*pi/4)
+  // with a velocity of 10 m/s for 0.1 s.
   state << 0, 0, 5*M_PI_4, 10, 0, 0;
   dt = 0.1;
+  // Should end at (-sqrt(2)/2,-sqrt(2)/2) with a speed of 10 m/s
+  // and a heading of -3*pi/4 due to forced angle wrap between [-pi,pi)
   stateNew << -sqrt(2)/2, -sqrt(2)/2, -3*M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing 305 degrees off of horizontal (heading is 7*pi/4)
+  // with a velocity of 10 m/s for 0.1 s.
   state << 0, 0, 7*M_PI_4, 10, 0, 0;
   dt = 0.1;
+  // Should end at (sqrt(2)/2,-sqrt(2)/2) with a speed of 10 m/s
+  // and a heading of -pi/4 due to forced angle wrap between [-pi,pi)
   stateNew << sqrt(2)/2, -sqrt(2)/2, -M_PI_4, 10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 }
 
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Vector6d Ekf::fSystem(Vector6d state, double dt)                          *
+ *****************************************************************************
+ * Negative velocity and zero angular velocity, i.e. a straight line.        *
+ *****************************************************************************/
 TEST(fSystemTest, NegVelZeroOmega) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
   Eigen::MatrixXd stateNew(6,1);
   double dt;
 
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with a velocity of -10 m/s for 0.1 s.
   state << 0, 0, 0, -10, 0, 0;
   dt = 0.1;
+  // Should end at (-1,0) with a speed of 10 m/s
   stateNew << -1, 0, 0, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with a velocity of -10 m/s for 10 s.
   dt = 10;
+  // Should end at (-100,0) with a speed of -10 m/s
   stateNew << -100, 0, 0, -10, 0, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
@@ -114,46 +187,92 @@ TEST(fSystemTest, NegVelZeroOmega) {
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew, ekf.fSystem(state,dt)));
 }
 
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Vector6d Ekf::fSystem(Vector6d state, double dt)                          *
+ *****************************************************************************
+ * Zero velocity and nonzero angular velocity, i.e. Spinning in place.       *
+ *****************************************************************************/
 TEST(fSystemTest, ZeroVelNonZeroOmega) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
   Eigen::MatrixXd stateNew(6,1);
   double dt;
 
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with an angular velocity of pi rad/s for 1 s.
   state << 0, 0, 0, 0, M_PI,  0;
   dt = 1;
+  // Should end at (0,0) facing in the -x direction (heading is -pi)
+  // with an angular velocity of pi rad/s.
   stateNew << 0, 0, -M_PI, 0, M_PI, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
+  // Starts at (0, 0) facing in the x directions (heading is 0)
+  // with an angular velocity of pi rad/s for 2 s.
   state << 0, 0, 0, 0, M_PI, 0;
   dt = 2;
+  // Should end at (0,0) facing in the x direction (heading is 0)
+  // with an angular velocity of pi rad/s.
   stateNew << 0, 0, 0, 0, M_PI, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
-
 }
 
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Vector6d Ekf::fSystem(Vector6d state, double dt)                          *
+ *****************************************************************************
+ * Constant velocity and angular velocity, i.e. Moving along a circular path.*
+ *****************************************************************************/
 TEST(fSystemTest, drawCircles) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
   Eigen::MatrixXd stateNew(6,1);
 
+  // Set v and omega as constants
   double omega = 1;
   double v = 2.5;
+  // The radius of curvature is defined by:
   double r = v/omega;
+  // And the circumference is defined by:
   double c = 2*M_PI*r;
+  // The time needed to make a complete circle is then:
   double dt = c/v;
 
+  // Start off at (0,0) and make a complete CCW circle.
   state << 0, 0, 0, v, omega, 0;
   stateNew << 0, 0, 0, v, omega, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
+  // Start off at (0,0) and make a complete CW circle.
   state << 0, 0, 0, v, -omega, 0;
   stateNew << 0, 0, 0, v, -omega, 0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 
+  // The time needed to make a half circle.
+  dt = c/v/2;
+
+  // Start off at (0,0)
+  state << 0, 0, 0, v, omega, 0;
+  // and make half a CCW circle
+  stateNew << 0, 2*r, -M_PI, v, omega, 0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
+
+  // Start off at (0,0)
+  state << 0, 0, 0, v, -omega, 0;
+  // and make half a CW circle
+  stateNew << 0, -2*r, -M_PI, v, -omega, 0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.fSystem(state,dt)));
 }
 
-TEST(hDecaWaveTest, 3_4_5_Grid) {
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Vector4d  Ekf::hDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,      *
+ *                          Vector2d DecaWaveOffset)                         *
+ *****************************************************************************
+ * Test on a grid of 3-4-5 triangles.                                        *
+ *****************************************************************************/
+TEST(hDecaWaveTest, TagInMiddle) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
 
@@ -182,6 +301,50 @@ TEST(hDecaWaveTest, 3_4_5_Grid) {
   // Now also offset the angle
   DecaWaveOffset << -1.0, -2.0;
   state << 1.0, 5.0, M_PI_2, 0.0, 0.0, 0.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+}
+
+TEST(hDecaWaveTest, TagOnCorner) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+
+  MatrixXd DecaWaveBeaconLoc(4,2);
+  Vector2d DecaWaveOffset;
+
+  // Set up a grid of 4 3-4-5 triangles.
+  // When beacon is in the middle, all distances will be 5. 
+  DecaWaveBeaconLoc << 0.0, 0.0,
+                       6.0, 0.0,
+                       6.0, 8.0,
+                       0.0, 8.0;
+  Vector4d h;
+
+  // Test tag on beacon 0
+  DecaWaveOffset << 0.0, 0.0;
+  state << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  // Distances should be as such
+  h << 0.0, 6.0, 10.0, 8.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+
+  // Test tag on beacon 1
+  DecaWaveOffset << 0.0, 0.0;
+  state << 6.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  // Distances should be as such
+  h << 6.0, 0.0, 8.0, 10.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+
+  // Test tag on beacon 2
+  DecaWaveOffset << 0.0, 0.0;
+  state << 6.0, 8.0, 0.0, 0.0, 0.0, 0.0;
+  // Distances should be as such
+  h << 10.0, 8.0, 0.0, 6.0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+
+  // Test tag on beacon 3
+  DecaWaveOffset << 0.0, 0.0;
+  state << 0.0, 8.0, 0.0, 0.0, 0.0, 0.0;
+  // Distances should be as such
+  h << 8.0, 10.0, 6.0, 0.0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 }
 
