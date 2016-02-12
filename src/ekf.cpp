@@ -243,40 +243,68 @@ Matrix46 Ekf::HDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
   double yTag = y + xOff*sin(theta) + yOff*cos(theta);
 
   // Calculate H
+  // Note that if distance n is zero, then HN1, HN2, and HN3, are zero.
   // distances are used multiple times in calculation
   double dist1 = pow(pow(dw1x-xTag,2)+pow(dw1y-yTag,2),0.5);
-  double H11 = -(dw1x-xTag)/dist1;
-  double H12 = -(dw1y-yTag)/dist1;
-  double H13 = ((dw1x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
-               +(dw1y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist1;
-
+  double H11, H12, H13;
+  if (dist1 == 0) {
+    H11 = 0.0;
+    H12 = 0.0;
+    H13 = 0.0;
+  }
+  else {
+    H11 = -(dw1x-xTag)/dist1;
+    H12 = -(dw1y-yTag)/dist1;
+    H13 = ((dw1x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+          +(dw1y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist1;
+  }
   // distances are used multiple times in calculation
   double dist2 = pow(pow(dw2x-xTag,2)+pow(dw2y-yTag,2),0.5);
-  double H21 = -(dw2x-xTag)/dist2;
-  double H22 = -(dw2y-yTag)/dist2;
-  double H23 = ((dw2x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
-               +(dw2y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist2;
-
+  double H21, H22, H23;
+  if (dist2 == 0) {
+    H21 = 0.0;
+    H22 = 0.0;
+    H23 = 0.0;
+  }
+  else {
+    H21 = -(dw2x-xTag)/dist2;
+    H22 = -(dw2y-yTag)/dist2;
+    H23 = ((dw2x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+          +(dw2y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist2;
+  }
   // distances are used multiple times in calculation
   double dist3 = pow(pow(dw3x-xTag,2)+pow(dw3y-yTag,2),0.5);
-  double H31 = -(dw3x-xTag)/dist3;
-  double H32 = -(dw3y-yTag)/dist3;
-  double H33 = ((dw3x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
-               +(dw3y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist3;
-
+  double H31, H32, H33;
+  if (dist3 == 0) {
+    H31 = 0.0;
+    H32 = 0.0;
+    H33 = 0.0;
+  }
+  else {
+    H31 = -(dw3x-xTag)/dist3;
+    H32 = -(dw3y-yTag)/dist3;
+    H33 = ((dw3x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+          +(dw3y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist3;
+  }
   // distances are used multiple times in calculation
   double dist4 = pow(pow(dw4x-xTag,2)+pow(dw4y-yTag,2),0.5);
-  double H41 = -(dw4x-xTag)/dist4;
-  double H42 = -(dw4y-yTag)/dist4;
-  double H43 = ((dw4x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
-               +(dw4y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist4;
-
+  double H41, H42, H43;
+  if (dist4 == 0) {
+    H41 = 0.0;
+    H42 = 0.0;
+    H43 = 0.0;
+  }
+  else {
+    H41 = -(dw4x-xTag)/dist4;
+    H42 = -(dw4y-yTag)/dist4;
+    H43 = ((dw4x-xTag)*( xOff*sin(theta) + yOff*cos(theta))
+          +(dw4y-yTag)*(-xOff*cos(theta) + yOff*sin(theta)))/dist4;
+  }
   Matrix46 H;
   H << H11, H12, H13, 0, 0, 0,
        H21, H22, H23, 0, 0, 0,
        H31, H32, H33, 0, 0, 0,
        H41, H42, H43, 0, 0, 0;
-
   return H;
 }
 

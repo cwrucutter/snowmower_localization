@@ -31,6 +31,7 @@ SOFTWARE.
 #include <gtest/gtest.h>
 #include <eigen-checks/gtest.h>
 #include "snowmower_localization/ekf.h"
+#include <iostream>
 
 /******************************************************************************
  * Testing:                                                                  *
@@ -270,14 +271,14 @@ TEST(fSystemTest, drawCircles) {
  * Vector4d  Ekf::hDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,      *
  *                          Vector2d DecaWaveOffset)                         *
  *****************************************************************************
- * Test on a grid of 3-4-5 triangles.                                        *
+ * Test on a grid of 3-4-5 triangles with the Tag in the middle.             *
  *****************************************************************************/
 TEST(hDecaWaveTest, TagInMiddle) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
 
-  MatrixXd DecaWaveBeaconLoc(4,2);
-  Vector2d DecaWaveOffset;
+  Eigen::MatrixXd DecaWaveBeaconLoc(4,2);
+  Eigen::Vector2d DecaWaveOffset;
 
   // Set up a grid of 4 3-4-5 triangles.
   // When beacon is in the middle, all distances will be 5. 
@@ -285,7 +286,7 @@ TEST(hDecaWaveTest, TagInMiddle) {
                        6.0, 0.0,
                        6.0, 8.0,
                        0.0, 8.0;
-  Vector4d h;
+  Eigen::Vector4d h;
   h << 5.0, 5.0, 5.0, 5.0;
 
   // Start with zero offset and robot in middle
@@ -304,12 +305,19 @@ TEST(hDecaWaveTest, TagInMiddle) {
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 }
 
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Vector4d  Ekf::hDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,      *
+ *                          Vector2d DecaWaveOffset)                         *
+ *****************************************************************************
+ * Test on a grid of 3-4-5 triangles with the Tag in the corners.            *
+ *****************************************************************************/
 TEST(hDecaWaveTest, TagOnCorner) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
 
-  MatrixXd DecaWaveBeaconLoc(4,2);
-  Vector2d DecaWaveOffset;
+  Eigen::MatrixXd DecaWaveBeaconLoc(4,2);
+  Eigen::Vector2d DecaWaveOffset;
 
   // Set up a grid of 4 3-4-5 triangles.
   // When beacon is in the middle, all distances will be 5. 
@@ -317,7 +325,7 @@ TEST(hDecaWaveTest, TagOnCorner) {
                        6.0, 0.0,
                        6.0, 8.0,
                        0.0, 8.0;
-  Vector4d h;
+  Eigen::Vector4d h;
 
   // Test tag on beacon 0
   DecaWaveOffset << 0.0, 0.0;
@@ -346,6 +354,113 @@ TEST(hDecaWaveTest, TagOnCorner) {
   // Distances should be as such
   h << 8.0, 10.0, 6.0, 0.0;
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(h,ekf.hDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+}
+
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Matrix46 Ekf::HDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
+ *                         Vector2d DecaWaveOffset) {
+ *****************************************************************************
+ * Test on a grid of 3-4-5 triangles with the Tag in the middle .            *
+ *****************************************************************************/
+TEST(HDecaWaveTest, TagInMiddle) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+
+  typedef Matrix<double, 4, 2, RowMajor> Matrix42;
+  Matrix42 DecaWaveBeaconLoc;
+  Eigen::Vector2d DecaWaveOffset;
+
+  // Set up a grid of 4 3-4-5 triangles.
+  // When beacon is in the middle, all distances will be 5. 
+  DecaWaveBeaconLoc << 0.0, 0.0,
+                       6.0, 0.0,
+                       6.0, 8.0,
+                       0.0, 8.0;
+
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix46 H;
+
+
+  // Test tag on beacon 0
+  DecaWaveOffset << 0.0, 0.0;
+  state << 3.0, 4.0, 0.0, 0.0, 0.0, 0.0;
+  // With tag in middle all distances should be 5;
+  double H11 = 3.0/5.0;
+  double H12 = 4.0/5.0;
+  double H13 = 0;
+
+  double H21 = -3.0/5.0;
+  double H22 = 4.0/5.0;
+  double H23 = 0;
+
+  double H31 = -3.0/5.0;
+  double H32 = -4.0/5.0;
+  double H33 = 0;
+
+  double H41 = 3.0/5.0;
+  double H42 = -4.0/5.0;
+  double H43 = 0;
+
+  H << H11, H12, H13, 0, 0, 0,
+       H21, H22, H23, 0, 0, 0,
+       H31, H32, H33, 0, 0, 0,
+       H41, H42, H43, 0, 0, 0;
+
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(H,ekf.HDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+}
+
+/*****************************************************************************
+ * Testing:                                                                  *
+ * Matrix46 Ekf::HDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
+ *                         Vector2d DecaWaveOffset) {
+ *****************************************************************************
+ * Test on a grid of 3-4-5 triangles with the Tag in the middle .            *
+ *****************************************************************************/
+TEST(HDecaWaveTest, TagOnCorners) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+
+  typedef Matrix<double, 4, 2, RowMajor> Matrix42;
+  Matrix42 DecaWaveBeaconLoc;
+  Eigen::Vector2d DecaWaveOffset;
+
+  // Set up a grid of 4 3-4-5 triangles.
+  // When beacon is in the middle, all distances will be 5. 
+  DecaWaveBeaconLoc << 0.0, 0.0,
+                       6.0, 0.0,
+                       6.0, 8.0,
+                       0.0, 8.0;
+
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix46 H;
+
+
+  // Test tag on beacon 0
+  DecaWaveOffset << 0.0, 0.0;
+  state << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  double H11 = 0.0;
+  double H12 = 0.0;
+  double H13 = 0;
+
+  double H21 = -6.0/6.0;
+  double H22 = 0.0;
+  double H23 = 0;
+
+  double H31 = -6.0/10.0;
+  double H32 = -8.0/10.0;
+  double H33 = 0;
+
+  double H41 = 0.0;
+  double H42 = -8.0/8.0;
+  double H43 = 0;
+
+  H << H11, H12, H13, 0, 0, 0,
+       H21, H22, H23, 0, 0, 0,
+       H31, H32, H33, 0, 0, 0,
+       H41, H42, H43, 0, 0, 0;
+
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(H,ekf.HDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 }
 
 TEST(hEncTest, straightLine) {
