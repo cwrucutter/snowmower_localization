@@ -108,7 +108,7 @@ class Ekf {
 		     Vector2d DecaWaveOffset);
   Matrix46 HDecaWave(Vector6d state, Matrix42 DecaWaveBecaonLoc,
 		     Vector2d DecaWaveOffset);
-  Matrix64 KDecaWave(Matrix6d cov, Matrix46 H, Matrix4d R);
+  MatrixXd KDecaWave(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R);
   Vector6d stateUpdateDecaWave(Vector6d state, Matrix64 K, Vector4d z,
 			       Vector4d h);
   Matrix6d covUpdateDecaWave(Matrix6d cov, Matrix64 K, Matrix46 H);

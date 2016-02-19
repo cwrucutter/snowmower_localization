@@ -309,7 +309,7 @@ Matrix46 Ekf::HDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
 }
 
 // 3. Kalman Gain, K
-Matrix64 Ekf::KDecaWave(Matrix6d cov, Matrix46 H, Matrix4d R){
+MatrixXd Ekf::KDecaWave(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R){
   // Find Kalman Gain
   Matrix64 K;
   K = cov*H.transpose()*(H*cov*H.transpose()+R).inverse();
