@@ -183,7 +183,7 @@ void Ekf::systemUpdate(double dt){
  Equations for DecaWave
  1. h(x)
  2. H(x)
- 3. Kalman Gain, K
+ 3. Kalman Gain, KG
  4. State update
  5. Covariance update
  6. Total measurement update
@@ -308,12 +308,36 @@ Matrix46 Ekf::HDecaWave(Vector6d state, Matrix42 DecaWaveBeaconLoc,
   return H;
 }
 
-// 3. Kalman Gain, K
-MatrixXd Ekf::KDecaWave(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R){
+// 3. Kalman Gain, KG
+MatrixXd Ekf::KG(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R){
   // Find Kalman Gain
   MatrixXd K;
   K = cov*H.transpose()*(H*cov*H.transpose()+R).inverse();
   return K;
+}
+
+/*! ---------------------------------------------------------------------------
+ * @fn MatrixXd Ekf::selectiveMeasurementKG(const MatrixXd& cov, 
+ *                                          const MatrixXd& H,
+ *                                          const MatrixXd& R,
+ *                                          const VectorXd& exMeas)
+ *
+ * @brief When a bad measurement is recieved, this function manipulates the
+ *        matricies used to calculate the Kalman Gain, K, such that the bad
+ *        measurement has no effect on the state update.
+ *
+ * input parameters:
+ * @param cov    - System covariance.
+ * @param H      - Jacobian of the measurement model, h(x).
+ * @param R      - Noise Matrix for the measurement.
+ * @param exMeas - Measurements to exclude from the EKF update.
+ *
+ * @returns - The modified Kalman gain, which ignores the specified
+ *            measurements.
+ */
+MatrixXd Ekf::selectiveMeasurementKG(const MatrixXd& cov, const MatrixXd& H,
+				  const MatrixXd& R, const VectorXd& exMeas){
+  int n = exMeas.size();
 }
 
 // 4. State update
@@ -355,7 +379,7 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   }
   // Now go on to calculate the Kalman gain with the new R value.
   Matrix64 K;
-  K = KDecaWave(cov_, H, RDecaWaveTemp);
+  K = KG(cov_, H, RDecaWaveTemp);
   // Find new state
   state_ = stateUpdateDecaWave(state_, K, z, h);
   // Find new covariance
@@ -536,6 +560,8 @@ void Ekf::initIMU(double R) {
   RIMU_ = R;
 }
 
+/* Helper functions. Should probably be moved to a new file. */
+
 Matrix6d Ekf::zeroOutBiasXYThetaCov(Matrix6d cov) {
   Matrix6d covNew;
   covNew = cov;
@@ -548,6 +574,37 @@ Matrix6d Ekf::zeroOutBiasXYThetaCov(Matrix6d cov) {
   return covNew;
 }
 
+/* Helper function to remove a row from an Eigen Matrix. If rowToRemove is
+ * greater than the number of rows, the last row is removed.
+ * http://stackoverflow.com/a/21068014/5525775
+ */
+void Ekf::removeRow(Eigen::MatrixXd& matrix, unsigned int rowToRemove)
+{
+  unsigned int numRows = matrix.rows()-1;
+  unsigned int numCols = matrix.cols();
+
+  if( rowToRemove < numRows )
+    matrix.block(rowToRemove,0,numRows-rowToRemove,numCols) = 
+      matrix.block(rowToRemove+1,0,numRows-rowToRemove,numCols);
+
+  matrix.conservativeResize(numRows,numCols);
+}
+
+/* Helper function to remove a column from an Eigen Matrix. If columnToRemove
+ * is greater than the number of columns, the last column is removed.
+ * http://stackoverflow.com/a/21068014/5525775
+ */
+void Ekf::removeColumn(Eigen::MatrixXd& matrix, unsigned int colToRemove)
+{
+  unsigned int numRows = matrix.rows();
+  unsigned int numCols = matrix.cols()-1;
+
+  if( colToRemove < numCols )
+    matrix.block(0,colToRemove,numRows,numCols-colToRemove) = 
+      matrix.block(0,colToRemove+1,numRows,numCols-colToRemove);
+
+  matrix.conservativeResize(numRows,numCols);
+}
 
 /* Constructor */
 Ekf::Ekf() {

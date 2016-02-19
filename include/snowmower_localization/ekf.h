@@ -108,7 +108,28 @@ class Ekf {
 		     Vector2d DecaWaveOffset);
   Matrix46 HDecaWave(Vector6d state, Matrix42 DecaWaveBecaonLoc,
 		     Vector2d DecaWaveOffset);
-  MatrixXd KDecaWave(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R);
+  MatrixXd KG(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R);
+  /*! -------------------------------------------------------------------------
+   * @fn MatrixXd Ekf::selectiveMeasurementKG(const MatrixXd& cov, 
+   *                                          const MatrixXd& H,
+   *                                          const MatrixXd& R,
+   *                                          const VectorXd& exMeas)
+   *
+   * @brief When a bad measurement is recieved, this function manipulates the
+   *        matricies used to calculate the Kalman Gain, K, such that the bad
+   *        measurement has no effect on the state update.
+   *
+   * input parameters:
+   * @param cov    - System covariance.
+   * @param H      - Jacobian of the measurement model, h(x).
+   * @param R      - Noise Matrix for the measurement.
+   * @param exMeas - Measurements to exclude from the EKF update.
+   *
+   * @returns - The modified Kalman gain, which ignores the specified
+   *            measurements.
+   */
+  MatrixXd selectiveMeasurementKG(const MatrixXd& cov, const MatrixXd& H,
+				  const MatrixXd& R, const VectorXd& exMeas);
   Vector6d stateUpdateDecaWave(Vector6d state, Matrix64 K, Vector4d z,
 			       Vector4d h);
   Matrix6d covUpdateDecaWave(Matrix6d cov, Matrix64 K, Matrix46 H);
@@ -142,6 +163,8 @@ class Ekf {
   // Function that zeros out the covariance between x, y, and theta, and the
   // yaw rate bias. Explanation found in Eric Perko's thesis.
   Matrix6d zeroOutBiasXYThetaCov(Matrix6d cov);
+  void removeRow(Eigen::MatrixXd& matrix, unsigned int rowToRemove);
+  void removeColumn(Eigen::MatrixXd& matrix, unsigned int colToRemove);
   
   //public:
   Ekf();
