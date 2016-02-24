@@ -31,7 +31,7 @@ SOFTWARE.
 #include <Eigen/LU>
 #include "snowmower_localization/ekf.h"
 #include <iostream>
-#include <cfloat> // for DBL_MAX
+#include <algorithm>
 
 // (6x1) state_, fSystem, KIMU, stateUpdate
 typedef Matrix<double, 6, 1> Vector6d;
@@ -337,7 +337,7 @@ MatrixXd Ekf::KG(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R){
  */
 MatrixXd Ekf::selectiveMeasurementKG(const MatrixXd& cov, const MatrixXd& H,
 				  const MatrixXd& R, const VectorXd& exMeas){
-  int n = exMeas.size();
+  //  unsigned int n = exMeas.size();
 }
 
 // 4. State update
@@ -574,11 +574,12 @@ Matrix6d Ekf::zeroOutBiasXYThetaCov(Matrix6d cov) {
   return covNew;
 }
 
-/* Helper function to remove a row from an Eigen Matrix. If rowToRemove is
+/* 
+ * Helper function to remove a row from an Eigen Matrix. If rowToRemove is
  * greater than the number of rows, the last row is removed.
- * http://stackoverflow.com/a/21068014/5525775
+ * Found at http://stackoverflow.com/a/21068014/5525775
  */
-void Ekf::removeRow(Eigen::MatrixXd& matrix, unsigned int rowToRemove)
+void Ekf::removeRow(MatrixXd& matrix, unsigned int rowToRemove)
 {
   unsigned int numRows = matrix.rows()-1;
   unsigned int numCols = matrix.cols();
@@ -590,11 +591,12 @@ void Ekf::removeRow(Eigen::MatrixXd& matrix, unsigned int rowToRemove)
   matrix.conservativeResize(numRows,numCols);
 }
 
-/* Helper function to remove a column from an Eigen Matrix. If columnToRemove
+/* 
+ * Helper function to remove a column from an Eigen Matrix. If columnToRemove
  * is greater than the number of columns, the last column is removed.
- * http://stackoverflow.com/a/21068014/5525775
+ * Found at http://stackoverflow.com/a/21068014/5525775
  */
-void Ekf::removeColumn(Eigen::MatrixXd& matrix, unsigned int colToRemove)
+void Ekf::removeColumn(MatrixXd& matrix, unsigned int colToRemove)
 {
   unsigned int numRows = matrix.rows();
   unsigned int numCols = matrix.cols()-1;
@@ -604,6 +606,43 @@ void Ekf::removeColumn(Eigen::MatrixXd& matrix, unsigned int colToRemove)
       matrix.block(0,colToRemove+1,numRows,numCols-colToRemove);
 
   matrix.conservativeResize(numRows,numCols);
+}
+
+/*
+ * A helper function to sort vector of unknown length and remove duplicates.
+ */
+VectorXi Ekf::uniqueSort(const VectorXi& vec) {
+  // Make a new vector to store the sorted, unique vector
+  unsigned int length = vec.size();
+  VectorXi newVec(length);
+  newVec = vec;
+  // First sort using insertion sort
+  unsigned int j;
+  int temp;
+  for (unsigned int i = 0; i < length; i++) {
+    j = i;
+    while (j > 0 && newVec(j) < newVec(j-1)) {
+      temp = newVec(j);
+      newVec(j) = newVec(j-1);
+      newVec(j-1) = temp;
+      j--;
+    }
+  }
+  // Then remove the duplicates
+  unsigned int entriesRemoved = 0;
+  for (unsigned int i = 1; i < length-entriesRemoved; i++) {
+    // Starting from the second entry, check to see if it matches the previous
+    // entry.
+    if (newVec(i) == newVec(i-1)) {
+      // If it does, move the rest of the vector up one space.
+      newVec.segment(i,length-i-entriesRemoved-1) = newVec.segment(i+1,length-i-entriesRemoved-1);
+      // And increase the count of entries removed.
+      entriesRemoved++;
+    }
+  }
+  // Finally, resize the vector.
+  newVec.conservativeResize(length-entriesRemoved);
+  return newVec;
 }
 
 /* Constructor */

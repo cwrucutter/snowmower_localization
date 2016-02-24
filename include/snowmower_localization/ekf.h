@@ -163,9 +163,19 @@ class Ekf {
   // Function that zeros out the covariance between x, y, and theta, and the
   // yaw rate bias. Explanation found in Eric Perko's thesis.
   Matrix6d zeroOutBiasXYThetaCov(Matrix6d cov);
-  void removeRow(Eigen::MatrixXd& matrix, unsigned int rowToRemove);
-  void removeColumn(Eigen::MatrixXd& matrix, unsigned int colToRemove);
-  
+  /* 
+   * Helper functions to remove a row or column from an Eigen Matrix. If
+   * rowToRemove or columnToRemove is greater than the number of rows or
+   * columns, the last column is removed.
+   * Found at http://stackoverflow.com/a/21068014/5525775
+   */
+  void removeRow(MatrixXd& matrix, unsigned int rowToRemove);
+  void removeColumn(MatrixXd& matrix, unsigned int colToRemove);
+  /*
+   * A helper function to sort vector of unknown length and remove duplicates.
+   */
+  VectorXi uniqueSort(const VectorXi& vec);
+
   //public:
   Ekf();
   ~Ekf();

@@ -463,6 +463,107 @@ TEST(HDecaWaveTest, TagOnCorners) {
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(H,ekf.HDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
 }
 
+/*****************************************************************************
+ * Testing:                                                                  *
+ * MatrixXd Ekf::K(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R)*
+ *****************************************************************************
+ * Test K*
+ *****************************************************************************/
+TEST(KDecaWaveTest, NegDistValues) {
+  Ekf ekf;
+  Eigen::MatrixXd state(6,1);
+
+  typedef Matrix<double, 4, 2, RowMajor> Matrix42;
+  Matrix42 DecaWaveBeaconLoc;
+  Eigen::Vector2d DecaWaveOffset;
+
+  // Set up a grid of 4 3-4-5 triangles.
+  // When beacon is in the middle, all distances will be 5. 
+  DecaWaveBeaconLoc << 0.0, 0.0,
+                       6.0, 0.0,
+                       6.0, 8.0,
+                       0.0, 8.0;
+
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix46 H;
+
+
+  // Test tag on beacon 0
+  DecaWaveOffset << 0.0, 0.0;
+  state << 0.0, 0.0, 0.0, 0.0, 0.0, 0.0;
+  double H11 = 0.0;
+  double H12 = 0.0;
+  double H13 = 0;
+
+  double H21 = -6.0/6.0;
+  double H22 = 0.0;
+  double H23 = 0;
+
+  double H31 = -6.0/10.0;
+  double H32 = -8.0/10.0;
+  double H33 = 0;
+
+  double H41 = 0.0;
+  double H42 = -8.0/8.0;
+  double H43 = 0;
+
+  H << H11, H12, H13, 0, 0, 0,
+       H21, H22, H23, 0, 0, 0,
+       H31, H32, H33, 0, 0, 0,
+       H41, H42, H43, 0, 0, 0;
+
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(H,ekf.HDecaWave(state, DecaWaveBeaconLoc, DecaWaveOffset)));
+}
+
+/*****************************************************************************
+ * Testing:                                                                  *
+ * VectorXd Ekf::uniqueSort(VectorXd& vec)                                   *
+ *****************************************************************************
+ * Make sure sorting works!                                                  *
+ *****************************************************************************/
+TEST(uniqueSort, sort) {
+  Ekf ekf;
+  Eigen::VectorXi state(10);
+  Eigen::VectorXi stateNew(10);
+  state    << 9, 3, 6, 7, 2, 4, 8, 0, 5, 1;
+  stateNew << 0, 1, 2, 3, 4, 5, 6, 7, 8, 9;
+
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew,ekf.uniqueSort(state)));
+}
+
+/*****************************************************************************
+ * Testing:                                                                  *
+ * VectorXd Ekf::uniqueSort(VectorXd& vec)                                   *
+ *****************************************************************************
+ * Make sure it can remove duplicates!                                       *
+ *****************************************************************************/
+TEST(uniqueSort, unique) {
+  Ekf ekf;
+  Eigen::VectorXi state0(10);
+  Eigen::VectorXi stateNew0(9);
+  state0    << 9, 3, 6, 7, 2, 2, 8, 0, 5, 1;
+  stateNew0 << 0, 1, 2, 3, 5, 6, 7, 8, 9;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew0,ekf.uniqueSort(state0)));
+
+  Eigen::VectorXi state1(10);
+  Eigen::VectorXi stateNew1(9);
+  state1    << 9, 9, 6, 7, 2, 4, 8, 0, 5, 1;
+  stateNew1 << 0, 1, 2, 4, 5, 6, 7, 8, 9;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew1,ekf.uniqueSort(state1)));
+
+  Eigen::VectorXi state2(10);
+  Eigen::VectorXi stateNew2(9);
+  state2    << 9, 3, 6, 7, 2, 8, 8, 0, 5, 1;
+  stateNew2 << 0, 1, 2, 3, 5, 6, 7, 8, 9;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew2,ekf.uniqueSort(state2)));
+
+  Eigen::VectorXi state3(10);
+  Eigen::VectorXi stateNew3(8);
+  state3    << 9, 3, 6, 7, 8, 9, 8, 0, 5, 1;
+  stateNew3 << 0, 1, 3, 5, 6, 7, 8, 9;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew3,ekf.uniqueSort(state3)));
+}
+
 TEST(hEncTest, straightLine) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
