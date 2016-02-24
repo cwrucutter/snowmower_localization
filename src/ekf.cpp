@@ -31,7 +31,6 @@ SOFTWARE.
 #include <Eigen/LU>
 #include "snowmower_localization/ekf.h"
 #include <iostream>
-#include <algorithm>
 
 // (6x1) state_, fSystem, KIMU, stateUpdate
 typedef Matrix<double, 6, 1> Vector6d;
