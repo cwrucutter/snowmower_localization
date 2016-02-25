@@ -335,8 +335,32 @@ MatrixXd Ekf::KG(const MatrixXd& cov, const MatrixXd& H, const MatrixXd& R){
  *            measurements.
  */
 MatrixXd Ekf::selectiveMeasurementKG(const MatrixXd& cov, const MatrixXd& H,
-				  const MatrixXd& R, const VectorXd& exMeas){
-  //  unsigned int n = exMeas.size();
+				  const MatrixXd& R, const VectorXi& exMeas){
+  // Create containers for the altered H and R matricies and init them.
+  MatrixXd HNew = H;
+  MatrixXd RNew = R;
+  // Sort the measurements to be excluded and remove duplicates
+  VectorXi exMeasNew = uniqueSort(exMeas);
+  // Then reverse the list so it is in descending order. Columns and rows will
+  // be removed in that order (highest first). If not, removing the 2nd row and
+  // then removing the 6th row would remove the 2nd and 7th row.
+  exMeasNew.reverseInPlace();
+  unsigned int length = exMeasNew.size();
+  // Iterate through the measurements to be removed.
+  for (unsigned int i = 0; i < length; i++) {
+    removeRow(HNew,exMeasNew(i));
+    removeRow(RNew,exMeasNew(i));
+    // removeColumn(RNew,exMeasNew(i));
+  }
+  // Calculate K using modified H and R matricies
+  MatrixXd K;
+  K = KG(cov, HNew, RNew);
+  // Now add column vectors filled with zeros at each slot in K where the rows
+  // were removed in H, but in reverse order (lower number first).
+  exMeasNew.reverseInPlace();
+  for (unsigned int i = 0; i < length; i++) {
+
+  }
 }
 
 // 4. State update
@@ -574,7 +598,7 @@ Matrix6d Ekf::zeroOutBiasXYThetaCov(Matrix6d cov) {
 }
 
 /* 
- * Helper function to remove a row from an Eigen Matrix. If rowToRemove is
+ * Helper function to remove a row from an Eigen Matrix. If row to Remove is
  * greater than the number of rows, the last row is removed.
  * Found at http://stackoverflow.com/a/21068014/5525775
  */
@@ -591,20 +615,48 @@ void Ekf::removeRow(MatrixXd& matrix, unsigned int rowToRemove)
 }
 
 /* 
- * Helper function to remove a column from an Eigen Matrix. If columnToRemove
+ * Helper function to remove a column from an Eigen Matrix. If colToRemove
  * is greater than the number of columns, the last column is removed.
  * Found at http://stackoverflow.com/a/21068014/5525775
  */
 void Ekf::removeColumn(MatrixXd& matrix, unsigned int colToRemove)
 {
+  std::cout << "1" << std::endl;
+  std::cout << matrix << std::endl;
+  std::cout << "2" << std::endl;
   unsigned int numRows = matrix.rows();
   unsigned int numCols = matrix.cols()-1;
 
+  std::cout << "3" << std::endl;
   if( colToRemove < numCols )
     matrix.block(0,colToRemove,numRows,numCols-colToRemove) = 
       matrix.block(0,colToRemove+1,numRows,numCols-colToRemove);
 
+  std::cout << "4" << std::endl;
   matrix.conservativeResize(numRows,numCols);
+  std::cout << "5" << std::endl;
+}
+
+/* 
+ * Helper function to add a column of zeros to an Eigen Matrix. If colToAdd
+ * is greater than the number of columns, the column will be added to the end.
+ */
+void Ekf::addZeroColumn(MatrixXd& matrix, unsigned int colToAdd) {
+  unsigned int numRows = matrix.rows();
+  unsigned int numCols = matrix.cols()+1;
+
+  matrix.conservativeResize(numRows,numCols);
+
+  if( colToAdd < numCols ) {
+    // Shift the columns, starting with colToAdd, over 1 column
+    matrix.block(0,colToAdd+1,numRows,numCols-colToAdd-1) =
+      matrix.block(0,colToAdd,numRows,numCols-colToAdd-1);
+    // Then add the zero column vector at colToAdd
+    MatrixXd col(numRows,1);
+    col.setZero(numRows,1);
+    matrix.col(colToAdd) = col;
+  }
+  std::cout << matrix << std::endl;
 }
 
 /*

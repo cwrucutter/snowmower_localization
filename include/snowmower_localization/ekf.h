@@ -129,7 +129,7 @@ class Ekf {
    *            measurements.
    */
   MatrixXd selectiveMeasurementKG(const MatrixXd& cov, const MatrixXd& H,
-				  const MatrixXd& R, const VectorXd& exMeas);
+				  const MatrixXd& R, const VectorXi& exMeas);
   Vector6d stateUpdateDecaWave(Vector6d state, Matrix64 K, Vector4d z,
 			       Vector4d h);
   Matrix6d covUpdateDecaWave(Matrix6d cov, Matrix64 K, Matrix46 H);
@@ -171,6 +171,7 @@ class Ekf {
    */
   void removeRow(MatrixXd& matrix, unsigned int rowToRemove);
   void removeColumn(MatrixXd& matrix, unsigned int colToRemove);
+  void addZeroColumn(MatrixXd& matrix, unsigned int colToAdd);
   /*
    * A helper function to sort vector of unknown length and remove duplicates.
    */

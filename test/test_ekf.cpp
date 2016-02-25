@@ -564,6 +564,188 @@ TEST(uniqueSort, unique) {
   EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew3,ekf.uniqueSort(state3)));
 }
 
+/*****************************************************************************
+ * Testing:                                                                  *
+ * VectorXd Ekf::uniqueSort(VectorXd& vec)                                   *
+ *****************************************************************************
+ * Make sure it can remove duplicates!                                       *
+ *****************************************************************************/
+TEST(uniqueSort, empty) {
+  Ekf ekf;
+  Eigen::VectorXi state0;
+  Eigen::VectorXi stateNew0;
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(stateNew0,ekf.uniqueSort(state0)));
+}
+
+/*****************************************************************************
+ * Testing:                                                                  *
+ * void Ekf::removeColumn(MatrixXd& matrix, unsigned int colToRemove)        *
+ *****************************************************************************
+ * Test the first column.                                                    *
+ *****************************************************************************/
+TEST(removeColumn, firstCol) {
+  Ekf ekf;
+  std::cout << "1" << std::endl;
+  unsigned int colToRemove = 0;
+  std::cout << "2" << std::endl;
+  typedef Matrix<double, 3, 6, RowMajor> Matrix36;
+  std::cout << "3" << std::endl;
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  std::cout << "4" << std::endl;
+  MatrixXd m(4,6);
+  std::cout << "5" << std::endl;
+  MatrixXd mExpected(3,6);
+  std::cout << "6" << std::endl;
+  m << 
+    1,  2,  3,  4,  5,  6,
+    2,  4,  6,  8, 10, 12,
+    3,  6,  9, 12, 15, 18,
+    4,  8, 12, 16, 20, 24;
+  std::cout << "7" << std::endl;
+  mExpected << 
+    2,  4,  6,  8, 10, 12,
+    3,  6,  9, 12, 15, 18,
+    4,  8, 12, 16, 20, 24;
+  std::cout << "8" << std::endl;
+  ekf.removeColumn(m,colToRemove);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(m,mExpected));
+}
+
+/*****************************************************************************
+ * Testing:                                                                  *
+ * void Ekf::addZeroColumn(MatrixXd& matrix, unsigned int colToAdd)          *
+ *****************************************************************************
+ * Test the first column.                                                    *
+ *****************************************************************************/
+/*TEST(addZeroColumn, firstCol) {
+  Ekf ekf;
+  unsigned int colToAdd = 0;
+  typedef Matrix<double, 3, 6, RowMajor> Matrix36;
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix36 m;
+  Matrix46 mExpected;
+  m << 
+    1,  2,  4,
+    2,  4,  8,
+    3,  6, 12,
+    4,  8, 16,
+    5, 10, 20,
+    6, 12, 24;
+  mExpected << 
+    0,  1,  2,  4,
+    0,  2,  4,  8,
+    0,  3,  6, 12,
+    0,  4,  8, 16,
+    0,  5, 10, 20,
+    0,  6, 12, 24;
+  ekf.addZeroColumn(m,colToAdd);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(m,mExpected));
+}
+*/
+/*****************************************************************************
+ * Testing:                                                                  *
+ * void Ekf::addZeroColumn(MatrixXd& matrix, unsigned int colToAdd)          *
+ *****************************************************************************
+ * Test the middle columns.                                                  *
+ *****************************************************************************/
+/*TEST(addZeroColumn, middleCols) {
+  Ekf ekf;
+  unsigned int colToAdd = 1;
+  typedef Matrix<double, 3, 6, RowMajor> Matrix36;
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix36 m;
+  Matrix46 mExpected;
+  m << 
+    1,  2,  4,
+    2,  4,  8,
+    3,  6, 12,
+    4,  8, 16,
+    5, 10, 20,
+    6, 12, 24;
+  mExpected << 
+    1,  0,  2,  4,
+    2,  0,  4,  8,
+    3,  0,  6, 12,
+    4,  0,  8, 16,
+    5,  0, 10, 20,
+    6,  0, 12, 24;
+  ekf.addZeroColumn(m,colToAdd);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(m,mExpected));
+
+  mExpected << 
+    1,  2,  0,  4,
+    2,  4,  0,  8,
+    3,  6,  0, 12,
+    4,  8,  0, 16,
+    5, 10,  0, 20,
+    6, 12,  0, 24;
+  colToAdd = 2;
+  ekf.addZeroColumn(m,colToAdd);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(m,mExpected));
+}
+*/
+/*****************************************************************************
+ * Testing:                                                                  *
+ * void Ekf::addZeroColumn(MatrixXd& matrix, unsigned int colToAdd)          *
+ *****************************************************************************
+ * Test the last column.                                                     *
+ *****************************************************************************/
+/*TEST(addZeroColumn, lastCol) {
+  Ekf ekf;
+  unsigned int colToAdd = 3;
+  typedef Matrix<double, 3, 6, RowMajor> Matrix36;
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix36 m;
+  Matrix46 mExpected;
+  m << 
+    1,  2,  4,
+    2,  4,  8,
+    3,  6, 12,
+    4,  8, 16,
+    5, 10, 20,
+    6, 12, 24;
+  mExpected << 
+    1,  2,  4,  0,
+    2,  4,  8,  0,
+    3,  6, 12,  0,
+    4,  8, 16,  0,
+    5, 10, 20,  0,
+    6, 12, 24;  0,
+  ekf.addZeroColumn(m,colToAdd);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(m,mExpected));
+}
+*/
+/*****************************************************************************
+ * Testing:                                                                  *
+ * void Ekf::addZeroColumn(MatrixXd& matrix, unsigned int colToAdd)          *
+ *****************************************************************************
+ * Test with a large colToAdd.                                               *
+ *****************************************************************************/
+/*TEST(addZeroColumn, large_colToAdd) {
+  Ekf ekf;
+  unsigned int colToAdd = 99;
+  typedef Matrix<double, 3, 6, RowMajor> Matrix36;
+  typedef Matrix<double, 4, 6, RowMajor> Matrix46;
+  Matrix36 m;
+  Matrix46 mExpected;
+  m << 
+    1,  2,  4,
+    2,  4,  8,
+    3,  6, 12,
+    4,  8, 16,
+    5, 10, 20,
+    6, 12, 24;
+  mExpected << 
+    1,  2,  4,  0,
+    2,  4,  8,  0,
+    3,  6, 12,  0,
+    4,  8, 16,  0,
+    5, 10, 20,  0,
+    6, 12, 24;  0,
+  ekf.addZeroColumn(m,colToAdd);
+  EXPECT_TRUE(EIGEN_MATRIX_EQUAL_DOUBLE(m,mExpected));
+}
+*/
 TEST(hEncTest, straightLine) {
   Ekf ekf;
   Eigen::MatrixXd state(6,1);
