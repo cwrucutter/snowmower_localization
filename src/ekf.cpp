@@ -35,8 +35,8 @@ SOFTWARE.
 
 // (6x1) state_, fSystem, KIMU, stateUpdate
 typedef Matrix<double, 6, 1> Vector6d;
-// (6x6) cov_, Q_, FSystem, covUpdate 
-typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+// (6x6) cov_, Q_, FSystem, covUpdate
+typedef Matrix<double, 6, 6, RowMajor> Matrix6d;
 // (1x6) HIMU
 typedef Matrix<double, 1, 6> Matrix16;
 // (2x6) HEnc
@@ -80,7 +80,7 @@ Vector6d Ekf::fSystem(Vector6d state, double dt){
   else{
     cf = sin(omega*dt/2)/(omega*dt/2);
   }
-  
+
   // deltaX and deltaY are used a lot later. So, it makes sense to calculate them once now.
   double deltaX = cf*v*dt*cos(theta+omega*dt/2);
   double deltaY = cf*v*dt*sin(theta+omega*dt/2);
@@ -125,7 +125,7 @@ Matrix6d Ekf::FSystem(Vector6d state, double dt){
   double F24 =   2 * cf*sin(omega*dt/2+theta);
 
   double F151 =    v*dt*cos(omega*dt/2)*cos(omega*dt/2+theta)/omega;
-  double F152 =   -v*dt*cf*sin(omega*dt/2+theta); 
+  double F152 =   -v*dt*cf*sin(omega*dt/2+theta);
   double F153 =    -2*v*sin(omega*dt/2)*cos(omega*dt/2+theta)/pow(omega,2);
 
   // If omega = 0, F151 and F153 are infinite but opposite of each other.
@@ -163,7 +163,7 @@ Matrix6d Ekf::FSystem(Vector6d state, double dt){
        0,   0,   1,   0,  dt,   0,
        0,   0,   0,   1,   0,   0,
        0,   0,   0,   0,   1,   0,
-       0,   0,   0,   0,   0,   1; 
+       0,   0,   0,   0,   0,   1;
   return F;
 }
 
