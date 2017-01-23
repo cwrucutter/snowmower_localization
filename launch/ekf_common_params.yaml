@@ -25,7 +25,7 @@ DW_offset_y: -0.2008
 # Wheel Encoder Initialization
 # Entries in the R matrix for the wheel encoders
 Enc_R: [1, 0.0, 0.0, 1]
-track_width: 0.55
+track_width: 0.53
 tpm_right: 26500.0
 tpm_left: 27150.0
 
