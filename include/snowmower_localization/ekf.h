@@ -38,8 +38,8 @@ class Ekf {
  public:
   // (6x1) state_, fSystem, KIMU, stateUpdate
   typedef Matrix<double, 6, 1> Vector6d;
-  // (6x6) cov_, Q_, FSystem, covUpdate 
-  typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+  // (6x6) cov_, Q_, FSystem, covUpdate
+  typedef Matrix<double, 6, 6, RowMajor> Matrix6d;
   // (1x6) HIMU
   typedef Matrix<double, 1, 6> Matrix16;
   // (2x6) HEnc
@@ -64,7 +64,7 @@ class Ekf {
   *************/
   // System Model Covariance Matrix
   Matrix6d Q_;
- 
+
   // Decawave Beacon Locations (meters) x values in col 1, y values in col 2
   Matrix42 DecaWaveBeaconLoc_;
   // Decawave offset - Distance from base_link to decawave_link frames in m.
@@ -113,7 +113,7 @@ class Ekf {
 			       Vector4d h);
   Matrix6d covUpdateDecaWave(Matrix6d cov, Matrix64 K, Matrix46 H);
   void measurementUpdateDecaWave(Vector4d z); // z is d1-d4
-  
+
   // Relative measurement updates (e.g. encoders, IMU)
   // Wheel Encoders
   void initEnc(Matrix2d R, double b, double tpmRight, double tpmLeft);
@@ -127,7 +127,7 @@ class Ekf {
 			  Vector2d h);
   Matrix6d covUpdateEnc(Matrix6d cov, Matrix62 K, Matrix26 H);
   void measurementUpdateEncoders(Vector2i z, Vector2i zPre, double dt);
-  
+
   // IMU
   void initIMU(double R);
   double hIMU(Vector6d state);
@@ -142,7 +142,7 @@ class Ekf {
   // Function that zeros out the covariance between x, y, and theta, and the
   // yaw rate bias. Explanation found in Eric Perko's thesis.
   Matrix6d zeroOutBiasXYThetaCov(Matrix6d cov);
-  
+
   //public:
   Ekf();
   ~Ekf();
