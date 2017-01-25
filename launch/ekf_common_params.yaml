@@ -26,8 +26,8 @@ DW_offset_y: -0.2008
 # Entries in the R matrix for the wheel encoders
 Enc_R: [1, 0.0, 0.0, 1]
 track_width: 0.55
-tpm_right: 26500.0
-tpm_left: 27150.0
+tpm_right: 25396.0
+tpm_left: 25895.0
 
 # IMU Initialization
 R_IMU: 0.0001
