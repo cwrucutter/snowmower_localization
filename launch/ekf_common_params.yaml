@@ -10,12 +10,12 @@ map_frame: map
 covariance: [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1]
 
 # System Initialization
-Q: [0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0.00001]
+Q: [0.0001, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0, 0, 0, 0.0001, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0.00001]
 
 # DecaWave Initialization
 # Entries in the R matrix for the decawave beacons
 # DW_R: [0.0030, 0, 0, 0, 0, 0.0017, 0, 0, 0, 0, 0.0642, 0, 0, 0, 0, 0.0015]
-DW_R: [3, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3]
+DW_R: [6, 0, 0, 0, 0, 6, 0, 0, 0, 0, 6, 0, 0, 0, 0, 6]
 # Beacon Location x-y [x1, y1, x2, y2, x3, y3, x4, y4]
 # Done in launch file
 # DW_Beacon_Loc: [0.0, 0.0, 7.0, 0.0, 7.0, 10.0, 0.0, 10.0]
@@ -24,10 +24,34 @@ DW_offset_y: -0.2008
 
 # Wheel Encoder Initialization
 # Entries in the R matrix for the wheel encoders
-Enc_R: [1, 0.0, 0.0, 1]
-track_width: 0.55
+Enc_R: [1000000, 0.0, 0.0, 1000000]
+track_width: 0.53
 tpm_right: 25396.0
 tpm_left: 25895.0
 
 # IMU Initialization
-R_IMU: 0.0001
+R_IMU: 0.000001
+
+#--- Old parameters
+# System Initialization
+# Q: [0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 0.01, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0.00001]
+
+# DecaWave Initialization
+# Entries in the R matrix for the decawave beacons
+# DW_R: [0.0030, 0, 0, 0, 0, 0.0017, 0, 0, 0, 0, 0.0642, 0, 0, 0, 0, 0.0015]
+# DW_R: [3, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 3]
+# Beacon Location x-y [x1, y1, x2, y2, x3, y3, x4, y4]
+# Done in launch file
+# DW_Beacon_Loc: [0.0, 0.0, 7.0, 0.0, 7.0, 10.0, 0.0, 10.0]
+# DW_offset_x: -0.7072
+# DW_offset_y: -0.2008
+
+# Wheel Encoder Initialization
+# Entries in the R matrix for the wheel encoders
+# Enc_R: [1, 0.0, 0.0, 1]
+# track_width: 0.55
+# tpm_right: 25396.0
+# tpm_left: 25895.0
+
+# IMU Initialization
+# R_IMU: 0.0001
