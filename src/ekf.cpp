@@ -35,8 +35,8 @@ SOFTWARE.
 
 // (6x1) state_, fSystem, KIMU, stateUpdate
 typedef Matrix<double, 6, 1> Vector6d;
-// (6x6) cov_, Q_, FSystem, covUpdate 
-typedef Matrix<double, 6, 6, RowMajor> Matrix6d; 
+// (6x6) cov_, Q_, FSystem, covUpdate
+typedef Matrix<double, 6, 6, RowMajor> Matrix6d;
 // (1x6) HIMU
 typedef Matrix<double, 1, 6> Matrix16;
 // (2x6) HEnc
@@ -80,7 +80,7 @@ Vector6d Ekf::fSystem(Vector6d state, double dt){
   else{
     cf = sin(omega*dt/2)/(omega*dt/2);
   }
-  
+
   // deltaX and deltaY are used a lot later. So, it makes sense to calculate them once now.
   double deltaX = cf*v*dt*cos(theta+omega*dt/2);
   double deltaY = cf*v*dt*sin(theta+omega*dt/2);
@@ -163,7 +163,7 @@ Matrix6d Ekf::FSystem(Vector6d state, double dt){
        0,   0,   1,   0,  dt,   0,
        0,   0,   0,   1,   0,   0,
        0,   0,   0,   0,   1,   0,
-       0,   0,   0,   0,   0,   1; 
+       0,   0,   0,   0,   0,   1;
   return F;
 }
 
@@ -357,11 +357,18 @@ void Ekf::measurementUpdateDecaWave(Vector4d z){
   Matrix64 K;
   K = KDecaWave(cov_, H, RDecaWaveTemp);
   // Find new state
-  state_ = stateUpdateDecaWave(state_, K, z, h);
+  Vector6d state_temp = stateUpdateDecaWave(state_, K, z, h);
   // Find new covariance
-  cov_ = covUpdateDecaWave(cov_, K, H);
-  cov_ = zeroOutBiasXYThetaCov(cov_);
-
+  Matrix6d cov_temp = covUpdateDecaWave(cov_, K, H);
+  cov_temp = zeroOutBiasXYThetaCov(cov_temp);
+  // Only update if they are both all finite.
+  if (state_temp.allFinite() && cov_temp.allFinite()) {
+    state_ = state_temp;
+    cov_ = cov_temp;
+  }
+  else {
+    std::cout << "Nan or Inf detected after DecaWave update." << std::endl;
+  }
 }
 
 /***********************
@@ -435,11 +442,18 @@ void Ekf::measurementUpdateEncoders(Vector2i z, Vector2i zPre, double dt){
   Matrix62 K;
   K = KEnc(cov_, H, REnc_);
   // Find new state
-  state_ = stateUpdateEnc(state_, K, z, h);
+  Vector6d state_temp = stateUpdateEnc(state_, K, z, h);
   // Find new covariance
-  cov_ = covUpdateEnc(cov_, K, H);
-  cov_ = zeroOutBiasXYThetaCov(cov_);
-
+  Matrix6d cov_temp = covUpdateEnc(cov_, K, H);
+  cov_temp = zeroOutBiasXYThetaCov(cov_temp);
+  // Only update if they are both all finite.
+  if (state_temp.allFinite() && cov_temp.allFinite()) {
+    state_ = state_temp;
+    cov_ = cov_temp;
+  }
+  else {
+    std::cout << "Nan or Inf detected after Encoder update." << std::endl;
+  }
 }
 
 /***********************
@@ -502,11 +516,18 @@ void Ekf::measurementUpdateIMU(double z){ // z is omega_z
   Vector6d K;
   K = KIMU(cov_, H, RIMU_);
   // Find new state
-  state_ = stateupdateIMU(state_, K, z, h);
+  Vector6d state_temp = stateupdateIMU(state_, K, z, h);
   // Find new covariance
-  cov_ = covUpdateIMU(cov_, K, H);
-  cov_ = zeroOutBiasXYThetaCov(cov_);
-
+  Matrix6d cov_temp = covUpdateIMU(cov_, K, H);
+  cov_temp = zeroOutBiasXYThetaCov(cov_temp);
+  // Only update if they are both all finite.
+  if (state_temp.allFinite() && cov_temp.allFinite()) {
+    state_ = state_temp;
+    cov_ = cov_temp;
+  }
+  else {
+    std::cout << "Nan or Inf detected after IMU update." << std::endl;
+  }
 }
 
 void Ekf::initState(Vector6d state) {
