@@ -35,12 +35,10 @@ SOFTWARE.
 // DecaWave callback function
 void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
-  ROS_INFO_STREAM("dtSys = " << dtSys);
   Vector4d z;
   z << msg.dist[0], msg.dist[1], msg.dist[2],msg.dist[3];
-  ROS_INFO_STREAM("dw = \n" << z);
   // If first Run, only initialize lastSystTime_
-  if (!firstRunSys_) { 
+  if (!firstRunSys_) {
     // Update system and decawave measurement models for ekf_map_
     ekf_map_.systemUpdate(dtSys);
     ekf_map_.measurementUpdateDecaWave(z);
@@ -56,8 +54,6 @@ void EkfNode::dwSubCB(const snowmower_msgs::DecaWaveMsg& msg){
 void EkfNode::encSubCB(const snowmower_msgs::EncMsg& msg){
   double dtSys = dtSystem(msg.header.stamp);
   double dtEnc = dtEncoder(msg.header.stamp);
-  ROS_INFO_STREAM("dtSys = " << dtSys);
-  ROS_INFO_STREAM("dtEnc = " << dtEnc);
   Vector2i z;
   z << msg.right, msg.left;
   // If first Run, only initialize zPre_, lastSysTime_, and lastEncTime_.
@@ -82,7 +78,7 @@ void EkfNode::imuSubCB(const sensor_msgs::Imu& msg){
   double dtSys = dtSystem(msg.header.stamp);
   double z = msg.angular_velocity.z;
   // If first Run, only initialize lastSystTime_
-  if (!firstRunSys_) { 
+  if (!firstRunSys_) {
     // Update system and IMU measurement models for ekf_map_
     ekf_map_.systemUpdate(dtSys);
     ekf_map_.measurementUpdateIMU(z);
@@ -139,7 +135,7 @@ void EkfNode::publishState(ros::Time now){
   stateMapPub_.publish(state_msg);
   // Print for debugging purposes
   ROS_INFO_STREAM("\nstate = \n" << ekf_map_.state_);
-  ROS_INFO_STREAM("\ncovariance = \n" << ekf_map_.cov_);
+  // ROS_INFO_STREAM("\ncovariance = \n" << ekf_map_.cov_);
   /**************************************************************************
    * Populate Odometry message for ekf_odom_
    **************************************************************************/
@@ -191,7 +187,7 @@ void EkfNode::publishState(ros::Time now){
   q.setRPY(0.0, 0.0, theta1);
   map2odom.setRotation(q);
   br.sendTransform(tf::StampedTransform(map2odom, now, map_frame_, odom_frame_));
-} 
+}
 
   // Initialization process
 void EkfNode::init() {
@@ -418,7 +414,7 @@ EkfNode::EkfNode(): private_nh_("~") {
   stateMapPub_ = public_nh_.advertise<nav_msgs::Odometry>("odom_map",1);
   stateOdomPub_ = public_nh_.advertise<nav_msgs::Odometry>("odom",1);
 
-  // Create a subscriber object to subscribe to the topic 
+  // Create a subscriber object to subscribe to the topic
   dwSub_ = public_nh_.subscribe("dw/t0/data",1,&EkfNode::dwSubCB,this);
   imuSub_ = public_nh_.subscribe("imu/data",1,&EkfNode::imuSubCB,this);
   encSub_ = public_nh_.subscribe("enc",1,&EkfNode::encSubCB,this);
@@ -429,7 +425,7 @@ EkfNode::EkfNode(): private_nh_("~") {
   while (ros::Time::now() == timeZero) { }
   // Sleep for a small time to make sure publishing and subscribing works.
   ros::Duration(0.1).sleep();
-  // Initialize 
+  // Initialize
   init();
 }
 
