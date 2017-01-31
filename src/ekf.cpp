@@ -169,14 +169,22 @@ Matrix6d Ekf::FSystem(Vector6d state, double dt){
 
 // 3. System update
 void Ekf::systemUpdate(double dt){
-  // update state
-  state_ = fSystem(state_,dt);
+  // Find new state
+  Vector6d state_temp = fSystem(state_,dt);
   // Then calculate F
   Matrix6d F;
-  F = FSystem(state_,dt);
-  // Then update covariance
-  cov_ = F*cov_*F.transpose() + Q_;
-  cov_ = zeroOutBiasXYThetaCov(cov_);
+  F = FSystem(state_temp,dt);
+  // Find new covariance
+  Matrix6d cov_temp = F*cov_*F.transpose() + Q_;
+  cov_temp = zeroOutBiasXYThetaCov(cov_temp);
+  // Only update if they are both all finite.
+  if (state_temp.allFinite() && cov_temp.allFinite()) {
+    state_ = state_temp;
+    cov_ = cov_temp;
+  }
+  else {
+    std::cout << "Nan or Inf detected after System update." << std::endl;
+  }
 }
 
 /***********************
